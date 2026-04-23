@@ -4,6 +4,7 @@ import { buildConfig } from "payload";
 import { postgresAdapter } from "@payloadcms/db-postgres";
 import { lexicalEditor } from "@payloadcms/richtext-lexical";
 import { seoPlugin } from "@payloadcms/plugin-seo";
+import { vercelBlobStorage } from "@payloadcms/storage-vercel-blob";
 import sharp from "sharp";
 
 import { Pages } from "./collections/Pages";
@@ -44,6 +45,13 @@ export default buildConfig({
       uploadsCollection: "media",
       generateTitle: ({ doc }: any) => `${doc?.title || "OpticWise"} | OpticWise`,
       generateDescription: ({ doc }: any) => doc?.excerpt || "",
+    }),
+    vercelBlobStorage({
+      enabled: !!process.env.BLOB_READ_WRITE_TOKEN,
+      collections: {
+        media: true,
+      },
+      token: process.env.BLOB_READ_WRITE_TOKEN || "",
     }),
   ],
 });
