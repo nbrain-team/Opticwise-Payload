@@ -47,6 +47,9 @@ export const Pages: CollectionConfig = {
     },
     maxPerDoc: 50,
   },
+  lockDocuments: {
+    duration: 600,
+  },
   hooks: {
     afterChange: [revalidatePage],
     afterDelete: [revalidatePageDelete],

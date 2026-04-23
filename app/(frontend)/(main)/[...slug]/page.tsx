@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getPageBySlug, getAllPages, getMediaUrl } from "@/lib/payload-helpers";
 import { SubpageHero } from "@/components/SubpageHero";
-import { BlockRenderer } from "@/components/BlockRenderer";
+import { PageBlocksLive } from "@/components/PageBlocksLive";
 import { CTASection } from "@/components/CTASection";
 import { SITE } from "@/lib/site";
 
@@ -56,7 +56,7 @@ export default async function PayloadPage({
       />
 
       {hasBlocks ? (
-        <BlockRenderer blocks={p.layout} />
+        <PageBlocksLive initialData={p} />
       ) : (
         <section className="ow-section bg-white">
           <div className="ow-container max-w-3xl mx-auto text-center">

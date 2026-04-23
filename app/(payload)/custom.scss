@@ -1,1 +1,158 @@
-/* Custom Payload admin styles */
+/* OpticWise admin theme — navy + emerald accent */
+
+:root,
+[data-theme="light"],
+[data-theme="dark"] {
+  --opticwise-navy: #0a1628;
+  --opticwise-navy-2: #0f2847;
+  --opticwise-emerald: #10b981;
+  --opticwise-emerald-2: #059669;
+  --opticwise-gold: #f59e0b;
+}
+
+/* Login screen — navy gradient */
+[class*="template-minimal"],
+.template-minimal {
+  background:
+    radial-gradient(circle at 20% 50%, rgba(16, 185, 129, 0.08) 0%, transparent 55%),
+    radial-gradient(circle at 80% 50%, rgba(43, 108, 176, 0.10) 0%, transparent 55%),
+    linear-gradient(135deg, var(--opticwise-navy) 0%, var(--opticwise-navy-2) 100%) !important;
+  color: #fff;
+}
+
+.template-minimal .render-fields,
+.template-minimal h1,
+.template-minimal h2,
+.template-minimal label,
+.template-minimal a {
+  color: #fff;
+}
+
+.template-minimal .field-label {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+/* Primary buttons — emerald */
+.btn--style-primary,
+button[type="submit"].btn--style-primary {
+  background: var(--opticwise-emerald) !important;
+  border-color: var(--opticwise-emerald) !important;
+  color: #fff !important;
+}
+.btn--style-primary:hover {
+  background: var(--opticwise-emerald-2) !important;
+  border-color: var(--opticwise-emerald-2) !important;
+}
+
+/* Nav (left rail) — keep clean, but accent the active state */
+.nav__link--active,
+.nav__link[aria-current="page"] {
+  border-left: 3px solid var(--opticwise-emerald) !important;
+  background: rgba(16, 185, 129, 0.06);
+}
+
+/* Status pills */
+.status-pill--published,
+.status--published {
+  background: rgba(16, 185, 129, 0.12) !important;
+  color: var(--opticwise-emerald-2) !important;
+}
+.status-pill--draft,
+.status--draft {
+  background: rgba(245, 158, 11, 0.14) !important;
+  color: var(--opticwise-gold) !important;
+}
+
+/* Dashboard — give the cards a touch of OpticWise polish */
+.dashboard__group h2 {
+  letter-spacing: 0.02em;
+  color: var(--theme-elevation-900);
+}
+
+/* Custom dashboard widgets container */
+.opticwise-dashboard {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  margin: 0 0 28px;
+}
+.opticwise-dashboard__card {
+  background: var(--theme-elevation-50);
+  border: 1px solid var(--theme-elevation-100);
+  border-left: 4px solid var(--opticwise-emerald);
+  border-radius: 8px;
+  padding: 18px 20px;
+}
+.opticwise-dashboard__card--accent {
+  border-left-color: var(--opticwise-gold);
+}
+.opticwise-dashboard__card--blue {
+  border-left-color: #2b6cb0;
+}
+.opticwise-dashboard__card h3 {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--theme-elevation-600);
+  margin: 0 0 8px;
+}
+.opticwise-dashboard__card .stat {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--theme-elevation-1000);
+  line-height: 1.1;
+}
+.opticwise-dashboard__card .sub {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--theme-elevation-500);
+}
+.opticwise-dashboard__card ul {
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.opticwise-dashboard__card li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--theme-elevation-100);
+  font-size: 13px;
+  color: var(--theme-elevation-800);
+}
+.opticwise-dashboard__card li:last-child {
+  border-bottom: none;
+}
+.opticwise-dashboard__card li a {
+  color: inherit;
+  text-decoration: none;
+}
+.opticwise-dashboard__card li a:hover {
+  color: var(--opticwise-emerald-2);
+}
+.opticwise-dashboard__card li time {
+  color: var(--theme-elevation-500);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.opticwise-dashboard__hero {
+  background: linear-gradient(135deg, var(--opticwise-navy) 0%, var(--opticwise-navy-2) 100%);
+  color: #fff;
+  border-radius: 10px;
+  padding: 26px 28px;
+  margin: 0 0 22px;
+  border-left: 4px solid var(--opticwise-emerald);
+}
+.opticwise-dashboard__hero h2 {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 0 4px;
+  color: #fff;
+}
+.opticwise-dashboard__hero p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 14px;
+}

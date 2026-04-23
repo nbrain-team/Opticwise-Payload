@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getPostBySlug, getAllPosts, getMediaUrl } from "@/lib/payload-helpers";
-import { RichContent } from "@/components/RichContent";
+import { PostBodyLive } from "@/components/PostBodyLive";
 import { CTASection } from "@/components/CTASection";
 
 export const revalidate = 300;
@@ -54,7 +54,7 @@ export default async function InsightPostPage({ params }: { params: Promise<{ sl
 
       <section className="ow-section bg-white">
         <div className="ow-container max-w-3xl mx-auto">
-          <RichContent html={p.htmlContent} />
+          <PostBodyLive initialData={p} />
         </div>
       </section>
 

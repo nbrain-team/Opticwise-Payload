@@ -32,6 +32,9 @@ export const Posts: CollectionConfig = {
     },
     maxPerDoc: 50,
   },
+  lockDocuments: {
+    duration: 600,
+  },
   hooks: {
     afterChange: [revalidatePost],
     afterDelete: [revalidatePostDelete],

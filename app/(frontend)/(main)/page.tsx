@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getHomePage, getMediaUrl } from "@/lib/payload-helpers";
-import { BlockRenderer } from "@/components/BlockRenderer";
+import { PageBlocksLive } from "@/components/PageBlocksLive";
 import { CTASection } from "@/components/CTASection";
 import { SITE } from "@/lib/site";
 import { ScheduleReviewButton } from "@/components/ScheduleReviewPopup";
@@ -13,19 +13,7 @@ export default async function HomePage() {
   const hasBlocks = homePage?.layout && (homePage as any).layout.length > 0;
 
   if (hasBlocks) {
-    const p = homePage as any;
-    return (
-      <>
-        <BlockRenderer blocks={p.layout} />
-        <section className="bg-ow-navy py-20">
-          <div className="ow-container text-center max-w-2xl mx-auto">
-            <h2 className="text-2xl font-extrabold text-white mb-4">The Infinite Game</h2>
-            <p className="text-lg text-white/70 mb-6">Don&rsquo;t play for next quarter&mdash;build for the next decade.</p>
-            <p className="text-base text-white/85 font-semibold">{SITE.closingLine}</p>
-          </div>
-        </section>
-      </>
-    );
+    return <PageBlocksLive initialData={homePage} />;
   }
 
   return <StaticHomePage />;
