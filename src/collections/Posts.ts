@@ -4,23 +4,6 @@ import { revalidatePost, revalidatePostDelete } from "../hooks/revalidate";
 const FALLBACK_SERVER_URL =
   process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000";
 
-function previewBase(req: any): string {
-  const host =
-    req?.host ||
-    req?.headers?.get?.("host") ||
-    req?.headers?.host ||
-    null;
-  if (host) {
-    const protocol =
-      req?.protocol?.replace(/:$/, "") ||
-      (host.includes("localhost") || host.startsWith("127.")
-        ? "http"
-        : "https");
-    return `${protocol}://${host}`;
-  }
-  return FALLBACK_SERVER_URL;
-}
-
 export const Posts: CollectionConfig = {
   slug: "posts",
   access: {
@@ -31,16 +14,16 @@ export const Posts: CollectionConfig = {
     defaultColumns: ["title", "category", "_status", "publishedAt"],
     description: "Blog / Insights articles.",
     livePreview: {
-      url: ({ data, req }: any) =>
-        `${previewBase(req)}/insights/${(data?.slug as string) || ""}`,
+      url: ({ data }: any) =>
+        `/insights/${(data?.slug as string) || ""}`,
       breakpoints: [
         { label: "Mobile", name: "mobile", width: 375, height: 667 },
         { label: "Tablet", name: "tablet", width: 768, height: 1024 },
         { label: "Desktop", name: "desktop", width: 1440, height: 900 },
       ],
     },
-    preview: (doc, { req }: any = {}) =>
-      `${previewBase(req)}/insights/${(doc?.slug as string) || ""}`,
+    preview: (doc) =>
+      `${FALLBACK_SERVER_URL}/insights/${(doc?.slug as string) || ""}`,
   },
   versions: {
     drafts: {

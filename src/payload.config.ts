@@ -1,5 +1,6 @@
 import path from "path";
 import { fileURLToPath } from "url";
+
 import { buildConfig } from "payload";
 import { postgresAdapter } from "@payloadcms/db-postgres";
 import { lexicalEditor } from "@payloadcms/richtext-lexical";
@@ -18,32 +19,15 @@ import { Navigation } from "./globals/Navigation";
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
 
-const FALLBACK_SERVER_URL =
-  process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000";
-
 /**
- * Build the live-preview URL on the same origin as the admin request,
- * so the iframe and the parent admin window share an origin and the
- * useLivePreview postMessage origin check passes. Falls back to
- * NEXT_PUBLIC_SERVER_URL when no request is available (preview links
- * generated outside an HTTP context).
+ * Live-preview URLs are returned as RELATIVE paths.
+ * Payload's `formatAbsoluteURL` resolves them against
+ * `window.location.origin` on the client, which guarantees
+ * the iframe always loads from the same origin as the admin
+ * panel. This sidesteps NEXT_PUBLIC_SERVER_URL drift between
+ * the production alias and per-deployment Vercel URLs, and
+ * keeps the postMessage origin check passing.
  */
-function buildPreviewBase(req: any): string {
-  const host =
-    req?.host ||
-    req?.headers?.get?.("host") ||
-    req?.headers?.host ||
-    null;
-  if (host) {
-    const protocol =
-      req?.protocol?.replace(/:$/, "") ||
-      (host.includes("localhost") || host.startsWith("127.")
-        ? "http"
-        : "https");
-    return `${protocol}://${host}`;
-  }
-  return FALLBACK_SERVER_URL;
-}
 
 export default buildConfig({
   admin: {
@@ -64,13 +48,12 @@ export default buildConfig({
       beforeDashboard: ["/admin/BeforeDashboard#BeforeDashboard"],
     },
     livePreview: {
-      url: ({ data, collectionConfig, req }: any) => {
-        const base = buildPreviewBase(req);
+      url: ({ data, collectionConfig }: any) => {
         if (collectionConfig?.slug === "posts") {
-          return `${base}/insights/${(data?.slug as string) || ""}`;
+          return `/insights/${(data?.slug as string) || ""}`;
         }
-        if (data?.isHomePage) return base;
-        return `${base}/${(data?.slug as string) || ""}`;
+        if (data?.isHomePage) return "/";
+        return `/${(data?.slug as string) || ""}`;
       },
       collections: ["pages", "posts"],
       breakpoints: [

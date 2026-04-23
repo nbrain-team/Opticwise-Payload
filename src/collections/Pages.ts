@@ -13,21 +13,16 @@ import { revalidatePage, revalidatePageDelete } from "../hooks/revalidate";
 const FALLBACK_SERVER_URL =
   process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000";
 
-function previewBase(req: any): string {
-  const host =
-    req?.host ||
-    req?.headers?.get?.("host") ||
-    req?.headers?.host ||
-    null;
-  if (host) {
-    const protocol =
-      req?.protocol?.replace(/:$/, "") ||
-      (host.includes("localhost") || host.startsWith("127.")
-        ? "http"
-        : "https");
-    return `${protocol}://${host}`;
-  }
-  return FALLBACK_SERVER_URL;
+/**
+ * "Open in new tab" preview links need an absolute URL because the
+ * destination is a separate browser navigation, not an embedded iframe.
+ * Live preview URLs, in contrast, can be relative — Payload resolves
+ * them against `window.location.origin` so the iframe always shares the
+ * admin's origin (avoids alias vs. per-deployment Vercel URL drift).
+ */
+function pagePath(slug: string, isHomePage?: boolean): string {
+  if (isHomePage) return "/";
+  return `/${slug}`;
 }
 
 export const Pages: CollectionConfig = {
@@ -40,24 +35,19 @@ export const Pages: CollectionConfig = {
     defaultColumns: ["title", "slug", "_status", "updatedAt"],
     description: "Website pages with block-based layout builder.",
     livePreview: {
-      url: ({ data, req }: any) => {
-        const base = previewBase(req);
-        const slug = (data?.slug as string) || "";
-        if (data?.isHomePage) return base;
-        return `${base}/${slug}`;
-      },
+      url: ({ data }: any) =>
+        pagePath((data?.slug as string) || "", Boolean(data?.isHomePage)),
       breakpoints: [
         { label: "Mobile", name: "mobile", width: 375, height: 667 },
         { label: "Tablet", name: "tablet", width: 768, height: 1024 },
         { label: "Desktop", name: "desktop", width: 1440, height: 900 },
       ],
     },
-    preview: (doc, { req }: any = {}) => {
-      const base = previewBase(req);
-      const slug = (doc?.slug as string) || "";
-      if (doc?.isHomePage) return base;
-      return `${base}/${slug}`;
-    },
+    preview: (doc) =>
+      `${FALLBACK_SERVER_URL}${pagePath(
+        (doc?.slug as string) || "",
+        Boolean(doc?.isHomePage),
+      )}`,
   },
   versions: {
     drafts: {
