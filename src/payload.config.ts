@@ -18,8 +18,32 @@ import { Navigation } from "./globals/Navigation";
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
 
-const SERVER_URL =
+const FALLBACK_SERVER_URL =
   process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000";
+
+/**
+ * Build the live-preview URL on the same origin as the admin request,
+ * so the iframe and the parent admin window share an origin and the
+ * useLivePreview postMessage origin check passes. Falls back to
+ * NEXT_PUBLIC_SERVER_URL when no request is available (preview links
+ * generated outside an HTTP context).
+ */
+function buildPreviewBase(req: any): string {
+  const host =
+    req?.host ||
+    req?.headers?.get?.("host") ||
+    req?.headers?.host ||
+    null;
+  if (host) {
+    const protocol =
+      req?.protocol?.replace(/:$/, "") ||
+      (host.includes("localhost") || host.startsWith("127.")
+        ? "http"
+        : "https");
+    return `${protocol}://${host}`;
+  }
+  return FALLBACK_SERVER_URL;
+}
 
 export default buildConfig({
   admin: {
@@ -40,12 +64,13 @@ export default buildConfig({
       beforeDashboard: ["/admin/BeforeDashboard#BeforeDashboard"],
     },
     livePreview: {
-      url: ({ data, collectionConfig }) => {
+      url: ({ data, collectionConfig, req }: any) => {
+        const base = buildPreviewBase(req);
         if (collectionConfig?.slug === "posts") {
-          return `${SERVER_URL}/insights/${(data?.slug as string) || ""}`;
+          return `${base}/insights/${(data?.slug as string) || ""}`;
         }
-        if (data?.isHomePage) return SERVER_URL;
-        return `${SERVER_URL}/${(data?.slug as string) || ""}`;
+        if (data?.isHomePage) return base;
+        return `${base}/${(data?.slug as string) || ""}`;
       },
       collections: ["pages", "posts"],
       breakpoints: [
