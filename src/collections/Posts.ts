@@ -1,4 +1,8 @@
 import type { CollectionConfig } from "payload";
+import { revalidatePost, revalidatePostDelete } from "../hooks/revalidate";
+
+const SERVER_URL =
+  process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000";
 
 export const Posts: CollectionConfig = {
   slug: "posts",
@@ -7,11 +11,30 @@ export const Posts: CollectionConfig = {
   },
   admin: {
     useAsTitle: "title",
-    defaultColumns: ["title", "category", "status", "publishedAt"],
+    defaultColumns: ["title", "category", "_status", "publishedAt"],
     description: "Blog / Insights articles.",
+    livePreview: {
+      url: ({ data }) =>
+        `${SERVER_URL}/insights/${(data?.slug as string) || ""}`,
+      breakpoints: [
+        { label: "Mobile", name: "mobile", width: 375, height: 667 },
+        { label: "Tablet", name: "tablet", width: 768, height: 1024 },
+        { label: "Desktop", name: "desktop", width: 1440, height: 900 },
+      ],
+    },
+    preview: (doc) =>
+      `${SERVER_URL}/insights/${(doc?.slug as string) || ""}`,
   },
   versions: {
-    drafts: true,
+    drafts: {
+      autosave: { interval: 750 },
+      schedulePublish: true,
+    },
+    maxPerDoc: 50,
+  },
+  hooks: {
+    afterChange: [revalidatePost],
+    afterDelete: [revalidatePostDelete],
   },
   fields: [
     {

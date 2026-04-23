@@ -8,6 +8,10 @@ import { LeadMagnetBlock } from "../blocks/LeadMagnet";
 import { FAQBlock } from "../blocks/FAQ";
 import { TimelineBlock } from "../blocks/Timeline";
 import { DeliverablesBlock } from "../blocks/Deliverables";
+import { revalidatePage, revalidatePageDelete } from "../hooks/revalidate";
+
+const SERVER_URL =
+  process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000";
 
 export const Pages: CollectionConfig = {
   slug: "pages",
@@ -16,11 +20,36 @@ export const Pages: CollectionConfig = {
   },
   admin: {
     useAsTitle: "title",
-    defaultColumns: ["title", "slug", "status", "updatedAt"],
+    defaultColumns: ["title", "slug", "_status", "updatedAt"],
     description: "Website pages with block-based layout builder.",
+    livePreview: {
+      url: ({ data }) => {
+        const slug = (data?.slug as string) || "";
+        if (data?.isHomePage) return SERVER_URL;
+        return `${SERVER_URL}/${slug}`;
+      },
+      breakpoints: [
+        { label: "Mobile", name: "mobile", width: 375, height: 667 },
+        { label: "Tablet", name: "tablet", width: 768, height: 1024 },
+        { label: "Desktop", name: "desktop", width: 1440, height: 900 },
+      ],
+    },
+    preview: (doc) => {
+      const slug = (doc?.slug as string) || "";
+      if (doc?.isHomePage) return SERVER_URL;
+      return `${SERVER_URL}/${slug}`;
+    },
   },
   versions: {
-    drafts: true,
+    drafts: {
+      autosave: { interval: 750 },
+      schedulePublish: true,
+    },
+    maxPerDoc: 50,
+  },
+  hooks: {
+    afterChange: [revalidatePage],
+    afterDelete: [revalidatePageDelete],
   },
   fields: [
     {
