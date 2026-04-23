@@ -1,21 +1,27 @@
 "use client";
 
+import { useState } from "react";
 import { useLivePreview } from "@payloadcms/live-preview-react";
 import { RichContent } from "./RichContent";
-
-const SERVER_URL =
-  process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000";
 
 /**
  * Wraps a Post body with Payload's `useLivePreview` hook so the
  * insights/[slug] route updates on every keystroke when viewed
- * inside the admin Live Preview iframe. Outside the iframe this
- * is a no-op pass-through that just renders the server-supplied data.
+ * inside the admin Live Preview iframe.
+ *
+ * `serverURL` is derived from `window.location.origin` via a lazy
+ * initializer so the very first client render already has the
+ * correct value (the hook's `ready` message is only sent once, so it
+ * must be sent with the right serverURL the first time).
  */
 export function PostBodyLive({ initialData }: { initialData: any }) {
+  const [serverURL] = useState<string>(() =>
+    typeof window !== "undefined" ? window.location.origin : ""
+  );
+
   const { data } = useLivePreview<any>({
     initialData,
-    serverURL: SERVER_URL,
+    serverURL,
     depth: 2,
   });
 

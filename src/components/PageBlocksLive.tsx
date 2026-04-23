@@ -1,25 +1,28 @@
 "use client";
 
+import { useState } from "react";
 import { useLivePreview } from "@payloadcms/live-preview-react";
 import { BlockRenderer } from "./BlockRenderer";
 
-const SERVER_URL =
-  process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000";
-
 /**
- * Wraps the block layout for a Page document with Payload's
- * `useLivePreview` hook. Outside the admin Live Preview iframe this
- * is a no-op — `data` stays equal to `initialData`. Inside the
- * iframe, every keystroke in the editor triggers a re-render here.
+ * Wraps a Page document with Payload's `useLivePreview` hook.
+ *
+ * `serverURL` is derived from `window.location.origin` via a lazy
+ * initializer so it is correct on the very first client render. The
+ * live-preview hook does a strict `event.origin === serverURL` check,
+ * and admin + frontend share the same Vercel deployment, so this
+ * always matches without depending on a build-time env var.
+ *
+ * Outside the admin Live Preview iframe this is a no-op pass-through.
  */
-export function PageBlocksLive({
-  initialData,
-}: {
-  initialData: any;
-}) {
+export function PageBlocksLive({ initialData }: { initialData: any }) {
+  const [serverURL] = useState<string>(() =>
+    typeof window !== "undefined" ? window.location.origin : ""
+  );
+
   const { data } = useLivePreview<any>({
     initialData,
-    serverURL: SERVER_URL,
+    serverURL,
     depth: 2,
   });
 
