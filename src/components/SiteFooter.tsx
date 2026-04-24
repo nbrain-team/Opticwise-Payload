@@ -27,7 +27,7 @@ export function SiteFooter() {
               {SITE.products.map((p) => (
                 <li key={p.href}><Link href={p.href} className="text-sm hover:text-white transition-colors">{p.label}</Link></li>
               ))}
-              <li><Link href="/how-we-operate-digital-infrastructure/" className="text-sm hover:text-white transition-colors">How We Operate</Link></li>
+              <li><Link href="/how-we-operate/" className="text-sm hover:text-white transition-colors">How We Operate</Link></li>
             </ul>
           </div>
           <div>

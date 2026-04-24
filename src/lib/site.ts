@@ -12,7 +12,7 @@ export const SITE = {
     href: "/ppp-audit/",
   },
   nav: [
-    { label: "How It Works", href: "/#how-it-works" },
+    { label: "How It Works", href: "/how-we-operate/" },
     { label: "Pillars", href: "/digital-infrastructure-noi-ai/" },
     { label: "Insights", href: "/insights/" },
     { label: "FAQ", href: "/faq/" },
@@ -29,6 +29,6 @@ export const SITE = {
   products: [
     { label: "PPP Audit\u2122", href: "/ppp-audit/" },
     { label: "BoT\u00AE", href: "/bot-building-of-things/" },
-    { label: "5S\u00AE Wireless", href: "/5s-wireless-connectivity/" },
+    { label: "5S\u00AE Wireless", href: "/5s-user-experience-standard/" },
   ],
 };
