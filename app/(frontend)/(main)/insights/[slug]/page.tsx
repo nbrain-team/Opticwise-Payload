@@ -1,14 +1,17 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getPostBySlug, getPostFeatureImageUrl } from "@/lib/payload-helpers";
+import { getPostBySlug, getAllPosts, getPostFeatureImageUrl } from "@/lib/payload-helpers";
 import { PostBodyLive } from "@/components/PostBodyLive";
 import { CTASection } from "@/components/CTASection";
 
-// Same reasoning as app/(frontend)/(main)/[...slug]/page.tsx — render at
-// request time so a transient build-time DB hiccup can never bake a 404
-// into a real, published blog post.
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+// Static + ISR. See note in app/(frontend)/(main)/[...slug]/page.tsx.
+export const revalidate = 300;
+export const dynamicParams = true;
+
+export async function generateStaticParams() {
+  const posts = await getAllPosts();
+  return posts.map((p: any) => ({ slug: p.slug }));
+}
 
 export default async function InsightPostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;

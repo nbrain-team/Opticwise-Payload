@@ -1,17 +1,20 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getPageBySlug, getMediaUrl } from "@/lib/payload-helpers";
+import { getPageBySlug, getAllPages, getMediaUrl } from "@/lib/payload-helpers";
 import { PageBlocksLive } from "@/components/PageBlocksLive";
 
-// Render at request time. Previously this used generateStaticParams +
-// revalidate, which baked 404s into the static cache for any page where
-// getPageBySlug returned null during the Vercel build (transient DB error,
-// connection pool exhaustion, etc). A baked notFound() does not recover
-// via ISR revalidation, producing intermittent 404s for users. Going
-// fully dynamic eliminates the entire class of build-baked 404 bugs and
-// lets the Live Preview iframe always see a fresh server render.
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+// Static generation with ISR. With the data-layer change in
+// src/lib/payload-helpers.ts (no more silent try/catch), a transient
+// build-time DB error now throws and FAILS the deploy instead of
+// silently baking a 404 into the static cache. dynamicParams=true
+// means slugs added after deploy still render on first request.
+export const revalidate = 300;
+export const dynamicParams = true;
+
+export async function generateStaticParams() {
+  const pages = await getAllPages();
+  return pages.map((p: any) => ({ slug: [p.slug] }));
+}
 
 export async function generateMetadata({
   params,
