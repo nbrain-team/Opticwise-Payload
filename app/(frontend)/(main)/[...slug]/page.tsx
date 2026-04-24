@@ -1,20 +1,15 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getPageBySlug, getAllPages, getMediaUrl } from "@/lib/payload-helpers";
+import { getPageBySlug, getMediaUrl } from "@/lib/payload-helpers";
 import { PageBlocksLive } from "@/components/PageBlocksLive";
 
-// Static generation with ISR. With the data-layer change in
-// src/lib/payload-helpers.ts (no more silent try/catch), a transient
-// build-time DB error now throws and FAILS the deploy instead of
-// silently baking a 404 into the static cache. dynamicParams=true
-// means slugs added after deploy still render on first request.
+// On-demand ISR (no generateStaticParams). The build does not prerender
+// every page; pages render on first request, then get cached for the
+// revalidate window. This avoids fanning 100+ parallel queries at Neon
+// during build (which fails with "postgres message too large"), and
+// still gives users fast cached HTML after the first hit.
 export const revalidate = 300;
 export const dynamicParams = true;
-
-export async function generateStaticParams() {
-  const pages = await getAllPages();
-  return pages.map((p: any) => ({ slug: [p.slug] }));
-}
 
 export async function generateMetadata({
   params,

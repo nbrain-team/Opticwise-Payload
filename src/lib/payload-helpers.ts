@@ -99,10 +99,14 @@ export async function getAllPages() {
 export async function getAllPosts() {
   return withLimit(() => withRetry("getAllPosts", async () => {
     const payload = await getPayloadClient();
+    // depth: 1 is enough for the listing card (title, slug, excerpt,
+    // featureImage URL, category title). Going to depth: 2 across 100+
+    // posts blows past Neon's serverless protocol message size limit
+    // and crashes the build with "postgres message too large".
     const result = await payload.find({
       collection: "posts",
       limit: 200,
-      depth: 2,
+      depth: 1,
       sort: "-publishedAt",
       where: { _status: { equals: "published" } },
     });
