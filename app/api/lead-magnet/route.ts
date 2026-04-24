@@ -3,13 +3,13 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { name, email, company, portfolioSize } = body;
+    const { name, email, company, portfolioSize, source } = body;
 
-    if (!name || !email) {
-      return NextResponse.json({ error: "Name and email are required." }, { status: 400 });
+    if (!email) {
+      return NextResponse.json({ error: "Email is required." }, { status: 400 });
     }
 
-    console.log("[Lead Magnet]", { name, email, company, portfolioSize });
+    console.log("[Lead Magnet]", { name, email, company, portfolioSize, source });
 
     return NextResponse.json({ ok: true });
   } catch {

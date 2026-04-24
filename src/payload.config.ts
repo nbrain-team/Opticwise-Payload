@@ -12,6 +12,7 @@ import { Pages } from "./collections/Pages";
 import { Posts } from "./collections/Posts";
 import { Media } from "./collections/Media";
 import { Categories } from "./collections/Categories";
+import { Authors } from "./collections/Authors";
 import { Users } from "./collections/Users";
 import { SiteSettings } from "./globals/SiteSettings";
 import { Navigation } from "./globals/Navigation";
@@ -63,7 +64,7 @@ export default buildConfig({
       ],
     },
   },
-  collections: [Pages, Posts, Media, Categories, Users],
+  collections: [Pages, Posts, Media, Categories, Authors, Users],
   globals: [SiteSettings, Navigation],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || "CHANGE-ME-PLEASE",

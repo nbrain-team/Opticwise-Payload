@@ -1,13 +1,19 @@
 import type { CollectionConfig } from "payload";
-import { HeroBlock } from "../blocks/Hero";
-import { ContentBlock } from "../blocks/Content";
-import { CardGridBlock } from "../blocks/CardGrid";
-import { CTABlock } from "../blocks/CTA";
-import { TwoLayerModelBlock } from "../blocks/TwoLayerModel";
-import { LeadMagnetBlock } from "../blocks/LeadMagnet";
-import { FAQBlock } from "../blocks/FAQ";
-import { TimelineBlock } from "../blocks/Timeline";
-import { DeliverablesBlock } from "../blocks/Deliverables";
+import { Hero } from "../blocks/v4/Hero";
+import { TwoColumn } from "../blocks/v4/TwoColumn";
+import { ProblemBlock } from "../blocks/v4/ProblemBlock";
+import { PullQuote } from "../blocks/v4/PullQuote";
+import { BotCallout } from "../blocks/v4/BotCallout";
+import { BrainBlock } from "../blocks/v4/BrainBlock";
+import { FivePlan } from "../blocks/v4/FivePlan";
+import { FiveStandard } from "../blocks/v4/FiveStandard";
+import { CardGrid } from "../blocks/v4/CardGrid";
+import { AvoidFailure } from "../blocks/v4/AvoidFailure";
+import { StarterKit } from "../blocks/v4/StarterKit";
+import { PortfolioGrid } from "../blocks/v4/PortfolioGrid";
+import { CallToAction } from "../blocks/v4/CallToAction";
+import { RichContent } from "../blocks/v4/RichContent";
+import { FAQ } from "../blocks/v4/FAQ";
 import { revalidatePage, revalidatePageDelete } from "../hooks/revalidate";
 
 const FALLBACK_SERVER_URL =
@@ -113,18 +119,40 @@ export const Pages: CollectionConfig = {
       },
     },
     {
+      name: "audience",
+      type: "select",
+      defaultValue: "primary",
+      admin: {
+        position: "sidebar",
+        description:
+          "Who this page is primarily addressing. Used for filtering / future audience targeting.",
+      },
+      options: [
+        { label: "Primary (general CRE owners)", value: "primary" },
+        { label: "LPs & Financiers", value: "lps" },
+        { label: "Property Managers", value: "pms" },
+        { label: "Tenants", value: "tenants" },
+      ],
+    },
+    {
       name: "layout",
       type: "blocks",
       blocks: [
-        HeroBlock,
-        ContentBlock,
-        CardGridBlock,
-        CTABlock,
-        TwoLayerModelBlock,
-        LeadMagnetBlock,
-        FAQBlock,
-        TimelineBlock,
-        DeliverablesBlock,
+        Hero,
+        TwoColumn,
+        ProblemBlock,
+        PullQuote,
+        BotCallout,
+        BrainBlock,
+        FivePlan,
+        FiveStandard,
+        CardGrid,
+        AvoidFailure,
+        StarterKit,
+        PortfolioGrid,
+        CallToAction,
+        RichContent,
+        FAQ,
       ],
     },
   ],

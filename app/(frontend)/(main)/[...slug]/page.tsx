@@ -1,10 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getPageBySlug, getAllPages, getMediaUrl } from "@/lib/payload-helpers";
-import { SubpageHero } from "@/components/SubpageHero";
 import { PageBlocksLive } from "@/components/PageBlocksLive";
-import { CTASection } from "@/components/CTASection";
-import { SITE } from "@/lib/site";
 
 export const revalidate = 300;
 
@@ -45,45 +42,21 @@ export default async function PayloadPage({
 
   const p = page as any;
   const layout: any[] = Array.isArray(p.layout) ? p.layout : [];
-  const hasBlocks = layout.length > 0;
 
-  // If the page's own layout already starts with a hero block, skip the
-  // generic SubpageHero so we don't render two stacked hero banners.
-  const ownsHero = layout[0]?.blockType === "hero";
-  // If the page's layout already contains a CTA block, skip the auto-injected
-  // CTASection + closing strip so we don't repeat the closing call to action.
-  const ownsCTA = layout.some((b: any) => b?.blockType === "cta");
+  if (layout.length === 0) {
+    return (
+      <section className="ow-section bg-white">
+        <div className="ow-container max-w-3xl mx-auto text-center py-32">
+          <h1 className="text-3xl font-extrabold text-gray-900 mb-4">
+            {p.title}
+          </h1>
+          <p className="text-gray-500">
+            This page is being built in the CMS. Check back soon.
+          </p>
+        </div>
+      </section>
+    );
+  }
 
-  return (
-    <>
-      {!ownsHero && (
-        <SubpageHero
-          title={p.title}
-          lead={p.excerpt || undefined}
-          badge={p.heroBadge || undefined}
-          bgImage={getMediaUrl(p.heroImage) || undefined}
-        />
-      )}
-
-      {hasBlocks ? (
-        <PageBlocksLive initialData={p} />
-      ) : (
-        <section className="ow-section bg-white">
-          <div className="ow-container max-w-3xl mx-auto text-center">
-            <p className="text-gray-400">This page is being built. Check back soon.</p>
-          </div>
-        </section>
-      )}
-
-      {!ownsCTA && <CTASection />}
-
-      {!ownsCTA && (
-        <section className="bg-ow-navy py-14">
-          <div className="ow-container text-center">
-            <p className="text-sm text-white/70 font-medium">{SITE.closingLine}</p>
-          </div>
-        </section>
-      )}
-    </>
-  );
+  return <PageBlocksLive initialData={p} />;
 }
