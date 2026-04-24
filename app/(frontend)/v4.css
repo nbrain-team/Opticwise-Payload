@@ -194,6 +194,35 @@
    LAYOUT UTILITIES
    ========================================================================== */
 
+/* Make the v4 area dark by default so nothing ever bleeds white from the
+   underlying body background (which Tailwind sets to bg-white globally). */
+.ow-v4 {
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* Restore Bill's global section padding (was stripped during CSS scoping)
+   — only blocks without their own explicit padding rule (problem, twocol,
+   bot, brain, fiveplan, cards, avoid, portfolio, starter, rich, faq, five-s)
+   need this; .hero / .quote / .cta already define their own padding. */
+.ow-v4 section {
+  position: relative;
+  padding-block: var(--space-9); /* 96px top + bottom */
+}
+
+.ow-v4 section.tight {
+  padding-block: var(--space-8); /* 64px */
+}
+
+@media (max-width: 768px) {
+  .ow-v4 section {
+    padding-block: var(--space-8);
+  }
+  .ow-v4 section.tight {
+    padding-block: var(--space-7);
+  }
+}
+
 .ow-v4 .container {
   width: 100%;
   max-width: var(--container-max);
