@@ -9,74 +9,118 @@ export async function getPayloadClient() {
   return cachedPayload;
 }
 
-// IMPORTANT: these helpers intentionally do NOT swallow errors.
+// Semaphore limiting concurrent Payload reads. Vercel build prerenders
+// 100+ pages in parallel; Neon's pooled connection limit was being
+// exhausted, causing reads to throw mid-build. Throttling to 4
+// concurrent queries keeps us well under the pool ceiling without a
+// noticeable build-time cost (each query is fast, just don't fan all
+// at once).
+const MAX_CONCURRENT = 4;
+let active = 0;
+const waiting: Array<() => void> = [];
+async function withLimit<T>(fn: () => Promise<T>): Promise<T> {
+  if (active >= MAX_CONCURRENT) {
+    await new Promise<void>((resolve) => waiting.push(resolve));
+  }
+  active++;
+  try {
+    return await fn();
+  } finally {
+    active--;
+    const next = waiting.shift();
+    if (next) next();
+  }
+}
+
+// Errors are NOT silently swallowed. A baked notFound() is permanent;
+// we'd rather a build/request fail loudly than serve a sticky 404 on a
+// real page. Only "row exists / row absent" semantics drive null vs
+// data — DB errors propagate.
 //
-// Earlier revisions wrapped each call in try/catch and returned null on
-// failure. That hid Postgres connection / timeout failures: at Vercel
-// build time a transient DB hiccup made every page render notFound(),
-// which Next.js then baked into the static cache as a permanent 404
-// (ISR revalidation cannot recover from a baked notFound). The result
-// was random, sticky 404s on real, published pages.
-//
-// Now: missing data returns `null` (legitimate "no such doc"), but a
-// real DB error throws and the build/request fails loudly. That makes
-// build problems visible AND keeps "doc exists / doc absent" semantics
-// distinct, so notFound() is only ever called for genuinely missing docs.
+// Retries on transient Postgres errors (connection drop, timeout) so a
+// single Neon hiccup during build doesn't take down a full deploy.
+
+const TRANSIENT_RE = /(ECONNRESET|ETIMEDOUT|terminat|timeout|server closed|Connection terminated|too many clients)/i;
+async function withRetry<T>(label: string, fn: () => Promise<T>, attempts = 3): Promise<T> {
+  let lastErr: any;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await fn();
+    } catch (err: any) {
+      lastErr = err;
+      if (!TRANSIENT_RE.test(err?.message || "")) break;
+      const wait = 250 * Math.pow(2, i);
+      console.warn(`[helpers] ${label} transient error (attempt ${i + 1}/${attempts}), retrying in ${wait}ms:`, err?.message);
+      await new Promise((r) => setTimeout(r, wait));
+    }
+  }
+  throw lastErr;
+}
 
 export async function getHomePage() {
-  const payload = await getPayloadClient();
-  const result = await payload.find({
-    collection: "pages",
-    where: { isHomePage: { equals: true } },
-    limit: 1,
-    depth: 2,
-  });
-  return result.docs[0] || null;
+  return withLimit(() => withRetry("getHomePage", async () => {
+    const payload = await getPayloadClient();
+    const result = await payload.find({
+      collection: "pages",
+      where: { isHomePage: { equals: true } },
+      limit: 1,
+      depth: 2,
+    });
+    return result.docs[0] || null;
+  }));
 }
 
 export async function getPageBySlug(slug: string) {
-  const payload = await getPayloadClient();
-  const result = await payload.find({
-    collection: "pages",
-    where: { slug: { equals: slug } },
-    limit: 1,
-    depth: 2,
-  });
-  return result.docs[0] || null;
+  return withLimit(() => withRetry(`getPageBySlug(${slug})`, async () => {
+    const payload = await getPayloadClient();
+    const result = await payload.find({
+      collection: "pages",
+      where: { slug: { equals: slug } },
+      limit: 1,
+      depth: 2,
+    });
+    return result.docs[0] || null;
+  }));
 }
 
 export async function getAllPages() {
-  const payload = await getPayloadClient();
-  const result = await payload.find({
-    collection: "pages",
-    limit: 100,
-    depth: 1,
-    where: { _status: { equals: "published" } },
-  });
-  return result.docs;
+  return withLimit(() => withRetry("getAllPages", async () => {
+    const payload = await getPayloadClient();
+    const result = await payload.find({
+      collection: "pages",
+      limit: 100,
+      depth: 1,
+      where: { _status: { equals: "published" } },
+    });
+    return result.docs;
+  }));
 }
 
 export async function getAllPosts() {
-  const payload = await getPayloadClient();
-  const result = await payload.find({
-    collection: "posts",
-    limit: 200,
-    depth: 2,
-    sort: "-publishedAt",
-    where: { _status: { equals: "published" } },
-  });
-  return result.docs;
+  return withLimit(() => withRetry("getAllPosts", async () => {
+    const payload = await getPayloadClient();
+    const result = await payload.find({
+      collection: "posts",
+      limit: 200,
+      depth: 2,
+      sort: "-publishedAt",
+      where: { _status: { equals: "published" } },
+    });
+    return result.docs;
+  }));
 }
 
 export async function getPostBySlug(slug: string) {
-  const payload = await getPayloadClient();
-  const result = await payload.find({
-    collection: "posts",
-    where: { slug: { equals: slug } },
-    limit: 1,
-    depth: 2,
-  });
-  return result.docs[0] || null;
+  return withLimit(() => withRetry(`getPostBySlug(${slug})`, async () => {
+    const payload = await getPayloadClient();
+    const result = await payload.find({
+      collection: "posts",
+      where: { slug: { equals: slug } },
+      limit: 1,
+      depth: 2,
+    });
+    return result.docs[0] || null;
+  }));
 }
 
 // Globals are non-critical chrome (headers, footers). If they error,
