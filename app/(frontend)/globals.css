@@ -101,6 +101,22 @@
   margin: 48px auto; max-width: 120px;
 }
 
+/* Dark-bg overrides for rich text inside dark sections */
+.rich-content-dark p { color: rgba(255,255,255,.75); }
+.rich-content-dark li { color: rgba(255,255,255,.75); }
+.rich-content-dark strong { color: #fff; }
+.rich-content-dark h2,
+.rich-content-dark h3,
+.rich-content-dark h4 { color: #fff; }
+.rich-content-dark blockquote {
+  background: rgba(255,255,255,.04);
+  border-left-color: #60a5fa;
+  color: rgba(255,255,255,.85);
+}
+.rich-content-dark a { color: #93c5fd; }
+.rich-content-dark a:hover { color: #bfdbfe; }
+.rich-content-dark hr { border-top-color: rgba(255,255,255,.1); }
+
 /* Legacy Ghost HTML content */
 .ghost-content { @apply prose prose-gray max-w-none prose-headings:text-gray-900 prose-p:text-gray-600 prose-strong:text-gray-900 prose-a:text-ow-blue prose-img:rounded-xl prose-img:shadow-md prose-img:mx-auto; }
 .ghost-content img { max-width: 100%; height: auto; border-radius: 12px; margin: 24px auto; display: block; }
@@ -342,6 +358,215 @@
 .pillar-description { @apply text-base text-gray-600 leading-relaxed mb-4; }
 .pillar-link { @apply text-base font-bold text-ow-blue; }
 
+/* ===================================
+   V4 BLOCK STYLES — pull quotes, numbered grids,
+   refined dark sections, ownership cells
+   =================================== */
+
+/* Dark "stage" backdrop with subtle radial gradient + grid pattern.
+   Use as an absolute overlay behind dark sections to add depth. */
+.ow-dark-stage {
+  position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(900px 500px at 18% 10%, rgba(43,108,176,.18) 0%, transparent 60%),
+    radial-gradient(700px 420px at 85% 90%, rgba(16,185,129,.08) 0%, transparent 65%),
+    linear-gradient(180deg, #0a1628 0%, #0a1c33 100%);
+}
+.ow-dark-grid {
+  position: absolute; inset: 0; pointer-events: none; opacity: .45;
+  background-image:
+    linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px),
+    linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 50%, #000 40%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 50%, #000 40%, transparent 100%);
+}
+
+/* Pull-quote style for CTA blocks that are really an editorial quote */
+.ow-pullquote {
+  max-width: 920px; margin: 0 auto; text-align: center;
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-size: clamp(1.5rem, 2.6vw, 2.1rem);
+  line-height: 1.35; letter-spacing: -.01em;
+  font-style: italic; font-weight: 500;
+}
+.ow-pullquote-mark {
+  display: block; font-family: 'Georgia', serif;
+  font-size: 4rem; line-height: 1;
+  background: linear-gradient(135deg, #60a5fa, #10B981);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 8px;
+}
+.ow-pullquote-citation {
+  display: inline-block; margin-top: 28px;
+  font-family: inherit; font-style: normal;
+  font-size: .72rem; letter-spacing: .18em; text-transform: uppercase;
+  color: rgba(255,255,255,.45);
+}
+.ow-pullquote-citation.is-light { color: #94a3b8; }
+
+/* Numbered process grid — for 5S / 5C style sections */
+.ow-num-grid {
+  display: grid; gap: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  max-width: 1180px; margin: 0 auto;
+}
+.ow-num-cell {
+  position: relative;
+  background: #fff;
+  border: 1px solid #e5e9ef;
+  border-radius: 16px;
+  padding: 26px 22px 24px;
+  transition: transform .25s, box-shadow .25s, border-color .25s;
+  overflow: hidden;
+}
+.ow-num-cell::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, #2B6CB0, #10B981);
+  transform: scaleX(0); transform-origin: left;
+  transition: transform .35s ease;
+}
+.ow-num-cell:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 18px 40px -18px rgba(15,40,71,.25);
+  border-color: rgba(43,108,176,.35);
+}
+.ow-num-cell:hover::before { transform: scaleX(1); }
+.ow-num-cell-num {
+  display: inline-block;
+  font-size: 2.25rem; font-weight: 800; line-height: 1;
+  background: linear-gradient(135deg, #2B6CB0, #10B981);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 14px; letter-spacing: -.02em;
+}
+.ow-num-cell-title {
+  font-size: 1.05rem; font-weight: 700; color: #0f172a;
+  margin: 0 0 6px; line-height: 1.3;
+}
+.ow-num-cell-badge {
+  display: inline-block;
+  margin: 0 0 10px;
+  font-size: .58rem; font-weight: 700;
+  letter-spacing: .14em; text-transform: uppercase;
+  background: #ecf3fb; color: #1d4ed8;
+  padding: 3px 9px; border-radius: 6px;
+}
+.ow-num-cell-desc {
+  font-size: .85rem; color: #64748b; line-height: 1.55;
+  margin: 0;
+}
+
+/* Dark variant */
+.ow-num-cell.is-dark {
+  background: rgba(255,255,255,.04);
+  border-color: rgba(255,255,255,.08);
+  backdrop-filter: blur(6px);
+}
+.ow-num-cell.is-dark:hover {
+  background: rgba(255,255,255,.06);
+  border-color: rgba(96,165,250,.4);
+  box-shadow: 0 18px 40px -18px rgba(0,0,0,.5);
+}
+.ow-num-cell.is-dark .ow-num-cell-title { color: #fff; }
+.ow-num-cell.is-dark .ow-num-cell-desc { color: rgba(255,255,255,.65); }
+.ow-num-cell.is-dark .ow-num-cell-badge {
+  background: rgba(96,165,250,.12); color: #93c5fd;
+}
+
+/* "Owner control" stat-style cells (ownership unlocks grid) */
+.ow-unlock-grid {
+  display: grid; gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  max-width: 1180px; margin: 0 auto;
+}
+.ow-unlock-cell {
+  position: relative; padding: 24px 22px;
+  background: #fff;
+  border: 1px solid #e5e9ef;
+  border-radius: 14px;
+  transition: all .25s;
+}
+.ow-unlock-cell::before {
+  content: ''; position: absolute; left: 0; top: 18px; bottom: 18px;
+  width: 3px; border-radius: 0 3px 3px 0;
+  background: linear-gradient(180deg, #2B6CB0, #10B981);
+  opacity: .35; transition: opacity .25s;
+}
+.ow-unlock-cell:hover {
+  transform: translateY(-2px);
+  border-color: rgba(43,108,176,.35);
+  box-shadow: 0 14px 36px -18px rgba(15,40,71,.25);
+}
+.ow-unlock-cell:hover::before { opacity: 1; }
+.ow-unlock-cell h3 {
+  font-size: .95rem; font-weight: 700; color: #0f172a;
+  margin: 0 0 6px; padding-left: 16px;
+}
+.ow-unlock-cell p {
+  font-size: .82rem; color: #64748b; line-height: 1.55;
+  margin: 0; padding-left: 16px;
+}
+
+/* Bold-prefix data row — for "Networks — Installed under vendor contracts." paragraphs */
+.ow-data-row {
+  display: grid; grid-template-columns: minmax(140px, 220px) 1fr;
+  gap: 18px; align-items: baseline;
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+  font-size: .95rem;
+}
+.ow-data-row:last-child { border-bottom: none; }
+.ow-data-row .ow-data-label {
+  font-weight: 700; color: #fff; letter-spacing: -.005em;
+  font-size: .95rem;
+}
+.ow-data-row .ow-data-value {
+  color: rgba(255,255,255,.7); font-weight: 400;
+}
+@media (max-width: 640px) {
+  .ow-data-row { grid-template-columns: 1fr; gap: 4px; padding: 10px 0; }
+}
+
+/* Cinematic portfolio card (dark backdrop) */
+.ow-portfolio-card {
+  position: relative;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 18px; overflow: hidden;
+  background: rgba(255,255,255,.03);
+  transition: all .3s;
+}
+.ow-portfolio-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(96,165,250,.4);
+  box-shadow: 0 30px 50px -20px rgba(0,0,0,.6);
+}
+.ow-portfolio-card .ow-portfolio-img {
+  position: relative; aspect-ratio: 4/3; overflow: hidden;
+}
+.ow-portfolio-card .ow-portfolio-img::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(10,22,40,0) 40%, rgba(10,22,40,.85) 100%);
+}
+.ow-portfolio-card img {
+  width: 100%; height: 100%; object-fit: cover;
+  transition: transform .6s ease;
+}
+.ow-portfolio-card:hover img { transform: scale(1.06); }
+.ow-portfolio-card .ow-portfolio-body {
+  padding: 22px 24px 26px; position: relative;
+}
+.ow-portfolio-card .ow-portfolio-title {
+  font-size: 1.05rem; font-weight: 700; color: #fff;
+  letter-spacing: -.01em; margin: 0 0 6px;
+}
+.ow-portfolio-card .ow-portfolio-desc {
+  font-size: .82rem; color: rgba(255,255,255,.65);
+  line-height: 1.55; margin: 0;
+}
+
+/* Mobile menu */
 .mobile-menu-enter { animation: slideDown .2s ease-out; }
 @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes bounce { 0%,100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(8px); } }

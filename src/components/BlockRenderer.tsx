@@ -75,14 +75,14 @@ function RenderBlock({ block }: { block: any }) {
 function HeroRenderer({ block }: { block: any }) {
   const bgImage = getMediaUrl(block.backgroundImage) || "/images/hero-industry.jpg";
   return (
-    <section className="relative min-h-screen flex items-center overflow-hidden pt-28 pb-20">
+    <section className="relative min-h-[88vh] flex items-center overflow-hidden pt-32 pb-24">
       <div className="absolute inset-0 z-0">
         <img src={bgImage} alt="" className="w-full h-full object-cover" />
       </div>
       <div className="hero-overlay" />
       <div className="hero-grid-lines" />
-      <div className="relative z-10 ow-container text-center">
-        <h1 className="text-4xl lg:text-5xl xl:text-6xl font-extrabold text-white leading-tight tracking-tight mb-7">
+      <div className="relative z-10 ow-container max-w-5xl mx-auto text-center">
+        <h1 className="text-4xl lg:text-[3.4rem] xl:text-[3.8rem] font-extrabold text-white leading-[1.1] tracking-tight mb-7">
           {block.heading}
           {block.headingHighlight && (
             <>
@@ -92,16 +92,18 @@ function HeroRenderer({ block }: { block: any }) {
           )}
         </h1>
         {block.description && (
-          <p className="text-lg lg:text-xl text-white/85 max-w-4xl mx-auto mb-4 leading-relaxed">
+          <p className="text-lg lg:text-xl text-white/85 max-w-3xl mx-auto mb-5 leading-relaxed">
             {block.description}
           </p>
         )}
         {block.secondaryText && (
-          <p className="text-base text-white/60 mb-8">{block.secondaryText}</p>
+          <p className="text-base text-white/55 max-w-2xl mx-auto mb-9">{block.secondaryText}</p>
         )}
         {block.calloutText && (
-          <div className="max-w-3xl mx-auto px-7 py-5 rounded-xl bg-ow-blue/15 border border-blue-400/30 backdrop-blur-sm mb-9">
-            <p className="text-lg font-bold text-white m-0">{block.calloutText}</p>
+          <div className="max-w-2xl mx-auto px-6 py-4 rounded-xl bg-white/[0.06] border border-white/15 backdrop-blur-md mb-10 shadow-[0_10px_40px_-10px_rgba(0,0,0,.5)]">
+            <p className="text-base lg:text-lg font-semibold text-white/95 m-0 tracking-tight">
+              {block.calloutText}
+            </p>
           </div>
         )}
         {block.buttons && block.buttons.length > 0 && (
@@ -129,12 +131,52 @@ function HeroRenderer({ block }: { block: any }) {
   );
 }
 
+/**
+ * Detects "Networks — Installed under vendor contracts." style paragraphs
+ * (a single bold-prefix node followed by a plain-text node) so we can render
+ * them as a structured data-row instead of a wall of paragraphs on dark
+ * backgrounds.
+ */
+function extractBoldRows(content: any): { label: string; value: string }[] | null {
+  if (!content?.root?.children) return null;
+  const children = content.root.children;
+  const rows: { label: string; value: string }[] = [];
+  let nonRowCount = 0;
+  for (const node of children) {
+    if (node.type !== "paragraph" || !Array.isArray(node.children)) {
+      nonRowCount++;
+      continue;
+    }
+    const kids = node.children;
+    if (
+      kids.length === 2 &&
+      kids[0]?.type === "text" &&
+      (kids[0]?.format & 1) === 1 &&
+      kids[1]?.type === "text" &&
+      (kids[1]?.format & 1) === 0
+    ) {
+      const label = String(kids[0].text || "")
+        .replace(/[\s\u2014\u2013\-:]+$/g, "")
+        .trim();
+      const value = String(kids[1].text || "").trim();
+      if (label && value) {
+        rows.push({ label, value });
+        continue;
+      }
+    }
+    nonRowCount++;
+  }
+  if (rows.length >= 3 && rows.length / children.length >= 0.5) return rows;
+  return null;
+}
+
 function ContentRenderer({ block }: { block: any }) {
-  const bgClass = block.backgroundColor === "gray" ? "bg-gray-50" : block.backgroundColor === "dark" ? "bg-ow-navy" : "bg-white";
   const isDark = block.backgroundColor === "dark";
+  const isGray = block.backgroundColor === "gray";
   const image = getMediaUrl(block.image);
 
   if (block.layout === "two-column" && image) {
+    const bgClass = isGray ? "bg-gray-50" : isDark ? "bg-ow-navy" : "bg-white";
     const imgEl = (
       <div className="relative rounded-2xl overflow-hidden shadow-xl">
         <img src={image} alt="" className="w-full" />
@@ -172,21 +214,66 @@ function ContentRenderer({ block }: { block: any }) {
     );
   }
 
+  // Dark variant — refined editorial layout with subtle stage backdrop,
+  // centered eyebrow + heading, and (when applicable) a structured data-row
+  // grid for "Bold — text" paragraphs.
+  if (isDark) {
+    const dataRows = extractBoldRows(block.richText);
+    return (
+      <section className="relative overflow-hidden ow-section">
+        <div className="ow-dark-stage" />
+        <div className="ow-dark-grid" />
+        <div className={`relative z-10 ow-container ${block.layout === "narrow" ? "max-w-3xl" : "max-w-4xl"} mx-auto text-center`}>
+          {block.eyebrow && (
+            <span className="inline-block text-[11px] font-bold uppercase tracking-[0.18em] text-blue-300 mb-4">
+              {block.eyebrow}
+            </span>
+          )}
+          {block.heading && (
+            <h2 className="text-3xl lg:text-[2.4rem] font-extrabold text-white leading-tight tracking-tight mb-5">
+              {block.heading}
+            </h2>
+          )}
+          <div className="accent-bar accent-bar-center mb-8" />
+          {dataRows ? (
+            <div className="text-left max-w-2xl mx-auto mt-2">
+              {dataRows.map((row, i) => (
+                <div key={i} className="ow-data-row">
+                  <span className="ow-data-label">{row.label}</span>
+                  <span className="ow-data-value">{row.value}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            block.richText && (
+              <div className="rich-content rich-content-dark text-white/75 mx-auto text-left">
+                <RichTextContent content={block.richText} />
+              </div>
+            )
+          )}
+        </div>
+      </section>
+    );
+  }
+
+  // Light variant — centered, generous spacing, accent bar
+  const lightBg = isGray ? "bg-gray-50" : "bg-white";
   return (
-    <section className={`ow-section ${bgClass}`}>
-      <div className={`ow-container ${block.layout === "narrow" ? "max-w-3xl mx-auto" : ""}`}>
+    <section className={`ow-section ${lightBg}`}>
+      <div className={`ow-container ${block.layout === "narrow" ? "max-w-3xl" : "max-w-4xl"} mx-auto text-center`}>
         {block.eyebrow && (
-          <span className={`text-xs font-bold uppercase tracking-widest ${isDark ? "text-blue-300" : "text-ow-blue"} mb-3 block`}>
+          <span className="inline-block text-[11px] font-bold uppercase tracking-[0.18em] text-ow-blue mb-4">
             {block.eyebrow}
           </span>
         )}
         {block.heading && (
-          <h2 className={`text-3xl lg:text-4xl font-extrabold ${isDark ? "text-white" : "text-gray-900"} leading-tight mb-6`}>
+          <h2 className="text-3xl lg:text-[2.4rem] font-extrabold text-gray-900 leading-tight tracking-tight mb-4">
             {block.heading}
           </h2>
         )}
+        <div className="accent-bar accent-bar-center mb-8" />
         {block.richText && (
-          <div className={`rich-content ${isDark ? "text-white/70" : ""}`}>
+          <div className="rich-content mx-auto text-left">
             <RichTextContent content={block.richText} />
           </div>
         )}
@@ -197,67 +284,192 @@ function ContentRenderer({ block }: { block: any }) {
 
 function CardGridRenderer({ block }: { block: any }) {
   const isDark = block.style === "dark";
-  const bgClass = isDark ? "bg-ow-navy" : block.style === "light" ? "bg-gray-50" : "bg-white";
-  const cols = block.columns === "2" ? "sm:grid-cols-2" : block.columns === "4" ? "sm:grid-cols-2 lg:grid-cols-4" : "sm:grid-cols-2 lg:grid-cols-3";
+  const cards = block.cards || [];
+  const anyImage = cards.some((c: any) => getMediaUrl(c.image));
+  const colsCount = block.columns === "2" ? 2 : block.columns === "4" ? 4 : 3;
+
+  // Dark + image cards = cinematic portfolio layout
+  if (isDark && anyImage) {
+    const colsClass =
+      colsCount === 2
+        ? "sm:grid-cols-2"
+        : colsCount === 4
+          ? "sm:grid-cols-2 lg:grid-cols-4"
+          : "sm:grid-cols-2 lg:grid-cols-3";
+    return (
+      <section className="relative overflow-hidden ow-section">
+        <div className="ow-dark-stage" />
+        <div className="ow-dark-grid" />
+        <div className="relative z-10 ow-container">
+          {(block.eyebrow || block.heading) && (
+            <div className="text-center mb-14">
+              {block.eyebrow && (
+                <span className="inline-block text-[11px] font-bold uppercase tracking-[0.18em] text-blue-300 mb-3">
+                  {block.eyebrow}
+                </span>
+              )}
+              {block.heading && (
+                <h2 className="text-3xl lg:text-[2.4rem] font-extrabold text-white leading-tight tracking-tight">
+                  {block.heading}
+                </h2>
+              )}
+              <div className="accent-bar accent-bar-center mb-3" />
+              {block.subheading && (
+                <p className="text-base text-white/60 max-w-2xl mx-auto">{block.subheading}</p>
+              )}
+            </div>
+          )}
+          <div className={`grid ${colsClass} gap-6 max-w-6xl mx-auto`}>
+            {cards.map((card: any, i: number) => {
+              const cardImage = getMediaUrl(card.image);
+              const inner = (
+                <div className="ow-portfolio-card h-full flex flex-col">
+                  {cardImage && (
+                    <div className="ow-portfolio-img">
+                      <img src={cardImage} alt={card.title} />
+                    </div>
+                  )}
+                  <div className="ow-portfolio-body flex-1">
+                    <h3 className="ow-portfolio-title">{card.title}</h3>
+                    {card.description && <p className="ow-portfolio-desc">{card.description}</p>}
+                  </div>
+                </div>
+              );
+              if (card.href) {
+                return <a key={i} href={card.href} className="block no-underline">{inner}</a>;
+              }
+              return <div key={i}>{inner}</div>;
+            })}
+          </div>
+          {block.footnote && (
+            <p className="text-center italic mt-10 text-white/45 max-w-2xl mx-auto text-sm">
+              {block.footnote}
+            </p>
+          )}
+        </div>
+      </section>
+    );
+  }
+
+  // Light "Ownership Unlocks" / 4-col compact grid (no images, no icons)
+  const noVisuals = cards.every((c: any) => !getMediaUrl(c.image) && !c.icon);
+  if (!isDark && noVisuals && colsCount >= 3) {
+    return (
+      <section className="ow-section bg-white">
+        <div className="ow-container">
+          {(block.eyebrow || block.heading) && (
+            <div className="text-center mb-12">
+              {block.eyebrow && (
+                <span className="inline-block text-[11px] font-bold uppercase tracking-[0.18em] text-ow-blue mb-3">
+                  {block.eyebrow}
+                </span>
+              )}
+              {block.heading && (
+                <h2 className="text-3xl lg:text-[2.4rem] font-extrabold text-gray-900 leading-tight tracking-tight">
+                  {block.heading}
+                </h2>
+              )}
+              <div className="accent-bar accent-bar-center mb-3" />
+              {block.subheading && (
+                <p className="text-base text-gray-500 max-w-2xl mx-auto">{block.subheading}</p>
+              )}
+            </div>
+          )}
+          <div className="ow-unlock-grid">
+            {cards.map((card: any, i: number) => {
+              const inner = (
+                <div className="ow-unlock-cell h-full">
+                  <h3>{card.title}</h3>
+                  {card.description && <p>{card.description}</p>}
+                </div>
+              );
+              if (card.href) {
+                return <a key={i} href={card.href} className="block no-underline">{inner}</a>;
+              }
+              return <div key={i}>{inner}</div>;
+            })}
+          </div>
+          {block.footnote && (
+            <p className="text-center italic mt-10 text-gray-500 max-w-2xl mx-auto text-sm">
+              {block.footnote}
+            </p>
+          )}
+        </div>
+      </section>
+    );
+  }
+
+  // Default fallback — original card style (dark or light, with icons/images)
+  const bgWrap = isDark
+    ? "relative overflow-hidden ow-section"
+    : block.style === "light"
+      ? "ow-section bg-gray-50"
+      : "ow-section bg-white";
+  const cols =
+    colsCount === 2
+      ? "sm:grid-cols-2"
+      : colsCount === 4
+        ? "sm:grid-cols-2 lg:grid-cols-4"
+        : "sm:grid-cols-2 lg:grid-cols-3";
 
   return (
-    <section className={`ow-section ${bgClass}`}>
-      <div className="ow-container">
+    <section className={bgWrap}>
+      {isDark && <><div className="ow-dark-stage" /><div className="ow-dark-grid" /></>}
+      <div className={`${isDark ? "relative z-10 " : ""}ow-container`}>
         {(block.eyebrow || block.heading) && (
-          <div className="text-center mb-14">
+          <div className="text-center mb-12">
             {block.eyebrow && (
-              <span className={`text-xs font-bold uppercase tracking-widest ${isDark ? "text-blue-300" : "text-ow-blue"} mb-3 block`}>
+              <span className={`inline-block text-[11px] font-bold uppercase tracking-[0.18em] ${isDark ? "text-blue-300" : "text-ow-blue"} mb-3`}>
                 {block.eyebrow}
               </span>
             )}
             {block.heading && (
-              <h2 className={`text-3xl lg:text-4xl font-extrabold ${isDark ? "text-white" : "text-gray-900"} leading-tight`}>
+              <h2 className={`text-3xl lg:text-[2.4rem] font-extrabold ${isDark ? "text-white" : "text-gray-900"} leading-tight tracking-tight`}>
                 {block.heading}
               </h2>
             )}
-            <div className="accent-bar-center accent-bar" />
+            <div className="accent-bar accent-bar-center mb-3" />
             {block.subheading && (
-              <p className={`text-lg max-w-xl mx-auto ${isDark ? "text-white/60" : "text-gray-500"}`}>
+              <p className={`text-base ${isDark ? "text-white/60" : "text-gray-500"} max-w-2xl mx-auto`}>
                 {block.subheading}
               </p>
             )}
           </div>
         )}
-        <div className={`grid ${cols} gap-6 max-w-5xl mx-auto`}>
-          {(block.cards || []).map((card: any, i: number) => {
+        <div className={`grid ${cols} gap-6 max-w-6xl mx-auto`}>
+          {cards.map((card: any, i: number) => {
             const cardImage = getMediaUrl(card.image);
             const colorGrad = ICON_COLORS[card.iconColor || "blue"] || ICON_COLORS.blue;
             const inner = (
               <div
-                key={i}
-                className={`${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"} border rounded-2xl ${cardImage ? "overflow-hidden" : "p-8"} text-center hover:shadow-lg hover:-translate-y-1 ${isDark ? "hover:border-blue-400/30" : "hover:border-ow-blue/20"} transition-all`}
+                className={`${isDark ? "bg-white/[.04] border-white/10 hover:border-blue-400/40" : "bg-white border-gray-200 hover:border-ow-blue/30"} border rounded-2xl ${cardImage ? "overflow-hidden" : "p-7"} text-center hover:-translate-y-1 hover:shadow-lg transition-all h-full`}
               >
                 {cardImage && (
                   <div className="aspect-[4/3] overflow-hidden">
-                    <img src={cardImage} alt={card.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <img src={cardImage} alt={card.title} className="w-full h-full object-cover transition-transform duration-500 hover:scale-[1.04]" />
                   </div>
                 )}
                 <div className={cardImage ? "p-6" : ""}>
                   {card.icon && !cardImage && (
-                    <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${colorGrad} text-white flex items-center justify-center mx-auto mb-4`}>
+                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${colorGrad} text-white flex items-center justify-center mx-auto mb-4`}>
                       <Icon name={card.icon} color={card.iconColor} />
                     </div>
                   )}
                   <h3 className={`text-base font-bold ${isDark ? "text-white" : "text-gray-900"} mb-2`}>{card.title}</h3>
                   {card.description && (
-                    <p className={`text-sm leading-relaxed ${isDark ? "text-gray-400" : "text-gray-500"}`}>{card.description}</p>
+                    <p className={`text-sm leading-relaxed ${isDark ? "text-white/65" : "text-gray-500"}`}>{card.description}</p>
                   )}
                 </div>
               </div>
             );
             if (card.href) {
-              return <a key={i} href={card.href} className="block no-underline group">{inner}</a>;
+              return <a key={i} href={card.href} className="block no-underline">{inner}</a>;
             }
             return <div key={i}>{inner}</div>;
           })}
         </div>
         {block.footnote && (
-          <p className={`text-center italic mt-10 ${isDark ? "text-white/40" : "text-gray-400"}`}>
+          <p className={`text-center italic mt-10 max-w-2xl mx-auto text-sm ${isDark ? "text-white/45" : "text-gray-500"}`}>
             {block.footnote}
           </p>
         )}
@@ -266,24 +478,86 @@ function CardGridRenderer({ block }: { block: any }) {
   );
 }
 
+/**
+ * Returns the heading stripped of leading/trailing curly or straight quotes
+ * (so we can wrap pull-quotes in our own typographic marks).
+ */
+function stripQuotes(text: string): string {
+  return text
+    .trim()
+    .replace(/^[\u201C\u201D"\u2018\u2019']+/, "")
+    .replace(/[\u201C\u201D"\u2018\u2019']+$/, "")
+    .trim();
+}
+function looksLikeQuote(text: string): boolean {
+  const t = text.trim();
+  return /^[\u201C"\u2018']/.test(t) || /[\u201D"\u2019']$/.test(t);
+}
+
 function CTARenderer({ block }: { block: any }) {
+  const hasButton = block.isScheduleReview || block.buttonHref;
+  const headingText = (block.heading || "").trim();
+  const isQuote = !hasButton && headingText && looksLikeQuote(headingText);
+
+  // SIMPLE — light pull-quote (when it's an editorial quote) or thin closing strip
   if (block.style === "simple") {
+    if (isQuote) {
+      return (
+        <section className="ow-section bg-gray-50">
+          <div className="ow-container max-w-4xl mx-auto text-center">
+            <span className="ow-pullquote-mark">&ldquo;</span>
+            <p className="ow-pullquote text-gray-900">{stripQuotes(headingText)}</p>
+            {(block.eyebrow || block.description) && (
+              <span className="ow-pullquote-citation is-light">
+                {block.eyebrow}
+                {block.eyebrow && block.description ? " — " : ""}
+                {block.description}
+              </span>
+            )}
+          </div>
+        </section>
+      );
+    }
     return (
       <section className="bg-ow-navy py-14">
         <div className="ow-container text-center">
-          {block.heading && <p className="text-sm text-white/70 font-medium">{block.heading}</p>}
+          {headingText && <p className="text-sm text-white/70 font-medium">{headingText}</p>}
         </div>
       </section>
     );
   }
 
+  // DARK — pull-quote on dark stage if it's a quote, otherwise full CTA
   if (block.style === "dark") {
+    if (isQuote) {
+      return (
+        <section className="relative overflow-hidden ow-section">
+          <div className="ow-dark-stage" />
+          <div className="ow-dark-grid" />
+          <div className="relative z-10 ow-container max-w-4xl mx-auto text-center">
+            <span className="ow-pullquote-mark">&ldquo;</span>
+            <p className="ow-pullquote text-white">{stripQuotes(headingText)}</p>
+            {block.eyebrow && (
+              <span className="ow-pullquote-citation">{block.eyebrow}</span>
+            )}
+          </div>
+        </section>
+      );
+    }
     return (
-      <section className="bg-ow-navy py-24">
-        <div className="ow-container text-center">
-          {block.eyebrow && <p className="text-xs font-bold uppercase tracking-widest text-blue-300 mb-4">{block.eyebrow}</p>}
-          {block.heading && <h2 className="text-2xl lg:text-3xl font-extrabold text-white mb-4">{block.heading}</h2>}
-          {block.description && <p className="text-base text-white/80 max-w-xl mx-auto mb-8">{block.description}</p>}
+      <section className="relative overflow-hidden py-24">
+        <div className="ow-dark-stage" />
+        <div className="ow-dark-grid" />
+        <div className="relative z-10 ow-container text-center">
+          {block.eyebrow && (
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-blue-300 mb-4">{block.eyebrow}</p>
+          )}
+          {headingText && (
+            <h2 className="text-2xl lg:text-3xl font-extrabold text-white mb-4 tracking-tight">{headingText}</h2>
+          )}
+          {block.description && (
+            <p className="text-base text-white/75 max-w-2xl mx-auto mb-8">{block.description}</p>
+          )}
           {block.isScheduleReview ? (
             <ScheduleReviewButton className="btn btn-white btn-lg" label={block.buttonLabel || "Schedule Your Review"} />
           ) : block.buttonHref ? (
@@ -294,17 +568,31 @@ function CTARenderer({ block }: { block: any }) {
     );
   }
 
+  // PRIMARY — gradient over background image
   const bgImage = getMediaUrl(block.backgroundImage) || "/images/testimonial-bg.jpg";
   return (
-    <section className="relative overflow-hidden py-24">
+    <section className="relative overflow-hidden py-24 lg:py-28">
       <div className="absolute inset-0 z-0">
         <img src={bgImage} alt="" className="w-full h-full object-cover" />
       </div>
-      <div className="absolute inset-0 z-[1]" style={{ background: "linear-gradient(135deg, rgba(43,108,176,.92), rgba(30,78,140,.95))" }} />
-      <div className="relative z-10 ow-container text-center">
-        {block.eyebrow && <p className="text-xs font-bold uppercase tracking-widest text-blue-200 mb-4">{block.eyebrow}</p>}
-        {block.heading && <h2 className="text-2xl lg:text-3xl font-extrabold text-white mb-4 leading-tight">{block.heading}</h2>}
-        {block.description && <p className="text-base text-white/80 max-w-xl mx-auto mb-8 leading-relaxed">{block.description}</p>}
+      <div
+        className="absolute inset-0 z-[1]"
+        style={{
+          background:
+            "linear-gradient(135deg, rgba(10,22,40,.92) 0%, rgba(43,108,176,.88) 50%, rgba(15,40,71,.94) 100%)",
+        }}
+      />
+      <div className="relative z-10 ow-container max-w-4xl mx-auto text-center">
+        {block.eyebrow && (
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-blue-200 mb-4">{block.eyebrow}</p>
+        )}
+        {headingText && (
+          <h2 className="text-3xl lg:text-[2.4rem] font-extrabold text-white mb-5 leading-tight tracking-tight">{headingText}</h2>
+        )}
+        <div className="accent-bar accent-bar-center mb-6" />
+        {block.description && (
+          <p className="text-base lg:text-lg text-white/85 max-w-2xl mx-auto mb-9 leading-relaxed">{block.description}</p>
+        )}
         {block.isScheduleReview ? (
           <ScheduleReviewButton className="btn btn-white btn-lg" label={block.buttonLabel || "Schedule Your Review"} />
         ) : block.buttonHref ? (
@@ -474,39 +762,65 @@ function FAQRenderer({ block }: { block: any }) {
 
 function TimelineRenderer({ block }: { block: any }) {
   const isDark = block.backgroundColor === "dark";
-  const bgClass = block.backgroundColor === "gray" ? "bg-gray-50" : isDark ? "bg-ow-navy" : "bg-white";
+  const isGray = block.backgroundColor === "gray";
+  const steps = block.steps || [];
+
+  const header = (
+    <>
+      {(block.eyebrow || block.heading) && (
+        <div className="text-center mb-12">
+          {block.eyebrow && (
+            <span className={`inline-block text-[11px] font-bold uppercase tracking-[0.18em] mb-3 ${isDark ? "text-blue-300" : "text-ow-blue"}`}>
+              {block.eyebrow}
+            </span>
+          )}
+          {block.heading && (
+            <h2 className={`text-3xl lg:text-[2.4rem] font-extrabold leading-tight tracking-tight ${isDark ? "text-white" : "text-gray-900"}`}>
+              {block.heading}
+            </h2>
+          )}
+          <div className="accent-bar accent-bar-center mb-3" />
+          {block.subheading && (
+            <p className={`text-base max-w-2xl mx-auto ${isDark ? "text-white/65" : "text-gray-500"}`}>
+              {block.subheading}
+            </p>
+          )}
+        </div>
+      )}
+    </>
+  );
+
+  const grid = (
+    <div className="ow-num-grid">
+      {steps.map((step: any, i: number) => (
+        <div key={i} className={`ow-num-cell ${isDark ? "is-dark" : ""}`}>
+          <div className="ow-num-cell-num">{step.number || String(i + 1).padStart(2, "0")}</div>
+          {step.badge && <span className="ow-num-cell-badge">{step.badge}</span>}
+          <h3 className="ow-num-cell-title">{step.title}</h3>
+          {step.description && <p className="ow-num-cell-desc">{step.description}</p>}
+        </div>
+      ))}
+    </div>
+  );
+
+  if (isDark) {
+    return (
+      <section className="relative overflow-hidden ow-section">
+        <div className="ow-dark-stage" />
+        <div className="ow-dark-grid" />
+        <div className="relative z-10 ow-container">
+          {header}
+          {grid}
+        </div>
+      </section>
+    );
+  }
 
   return (
-    <section className={`ow-section ${bgClass}`}>
+    <section className={`ow-section ${isGray ? "bg-gray-50" : "bg-white"}`}>
       <div className="ow-container">
-        {(block.eyebrow || block.heading) && (
-          <div className="section-header">
-            {block.eyebrow && (
-              <span className={`section-eyebrow ${isDark ? "section-eyebrow-light" : ""}`}>{block.eyebrow}</span>
-            )}
-            {block.heading && (
-              <h2 className={`section-heading ${isDark ? "section-heading-light" : ""}`}>{block.heading}</h2>
-            )}
-            <div className="accent-bar-center accent-bar" />
-            {block.subheading && (
-              <p className="section-subtitle">{block.subheading}</p>
-            )}
-          </div>
-        )}
-        <div className="ppp-timeline">
-          {(block.steps || []).map((step: any, i: number) => (
-            <div key={i} className={`ppp-step ${step.isActive ? "ppp-step-active" : ""}`}>
-              <div className="ppp-step-num">{step.number}</div>
-              <div className="ppp-step-body">
-                <h3>
-                  {step.title}
-                  {step.badge && <span className="ppp-badge">{step.badge}</span>}
-                </h3>
-                {step.description && <p>{step.description}</p>}
-              </div>
-            </div>
-          ))}
-        </div>
+        {header}
+        {grid}
       </div>
     </section>
   );
