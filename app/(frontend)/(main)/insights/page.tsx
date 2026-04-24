@@ -4,7 +4,7 @@ import { SubpageHero } from "@/components/SubpageHero";
 import { CTASection } from "@/components/CTASection";
 import { SITE } from "@/lib/site";
 import { InsightsGrid } from "@/components/InsightsGrid";
-import { getMediaUrl } from "@/lib/payload-helpers";
+import { getPostFeatureImageUrl } from "@/lib/payload-helpers";
 
 export const revalidate = 300;
 
@@ -22,7 +22,7 @@ export default async function InsightsPage() {
     title: p.title,
     slug: p.slug,
     excerpt: p.excerpt,
-    featureImageUrl: getMediaUrl(p.featureImage),
+    featureImageUrl: getPostFeatureImageUrl(p),
     categoryName: typeof p.category === "object" ? p.category?.title : null,
     publishedAt: p.publishedAt,
     readingTime: p.readingTime,

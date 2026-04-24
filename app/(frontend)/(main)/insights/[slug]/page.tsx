@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getPostBySlug, getAllPosts, getMediaUrl } from "@/lib/payload-helpers";
+import { getPostBySlug, getAllPosts, getPostFeatureImageUrl } from "@/lib/payload-helpers";
 import { PostBodyLive } from "@/components/PostBodyLive";
 import { CTASection } from "@/components/CTASection";
 
@@ -17,7 +17,7 @@ export default async function InsightPostPage({ params }: { params: Promise<{ sl
   if (!post) return notFound();
 
   const p = post as any;
-  const featureImage = getMediaUrl(p.featureImage);
+  const featureImage = getPostFeatureImageUrl(p);
   const categoryName = typeof p.category === "object" ? p.category?.title : null;
 
   return (

@@ -103,4 +103,9 @@ export async function getNavigation() {
   }
 }
 
-export { getMediaUrl, getMediaAlt } from "./media-utils";
+export {
+  getMediaUrl,
+  getMediaAlt,
+  extractFeatureImageFromHtml,
+  getPostFeatureImageUrl,
+} from "./media-utils";
