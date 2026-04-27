@@ -42,14 +42,17 @@ function findFaqQuestions(
   layout: any[],
 ): Array<{ question: string; answer: string }> | null {
   if (!Array.isArray(layout)) return null;
+  const all: Array<{ question: string; answer: string }> = [];
   for (const b of layout) {
     if (b?.blockType === "faq" && Array.isArray(b.questions)) {
-      return b.questions
-        .filter((q: any) => q?.question && q?.answer)
-        .map((q: any) => ({ question: q.question, answer: q.answer }));
+      for (const q of b.questions) {
+        if (q?.question && q?.answer) {
+          all.push({ question: q.question, answer: q.answer });
+        }
+      }
     }
   }
-  return null;
+  return all.length > 0 ? all : null;
 }
 
 export default async function PayloadPage({
