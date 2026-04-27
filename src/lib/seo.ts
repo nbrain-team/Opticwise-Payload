@@ -55,14 +55,15 @@ export function buildMetadata({
     settingsAny.defaultMetaDescription ||
     undefined;
 
-  const ogImage = pickImage(
-    docMeta.ogImage,
-    doc?.featureImage,
-    doc?.heroImage,
-    settingsAny.defaultOgImage,
-  );
+  const ogImage =
+    pickImage(
+      docMeta.ogImage,
+      doc?.featureImage,
+      doc?.heroImage,
+      settingsAny.defaultOgImage,
+    ) || `${base}/images/og-default.png`;
 
-  const images = ogImage ? [{ url: ogImage }] : undefined;
+  const images = [{ url: ogImage, width: 1200, height: 630 }];
 
   const noIndex = Boolean(docMeta.noIndex);
 
@@ -85,7 +86,7 @@ export function buildMetadata({
       card: "summary_large_image",
       title,
       description,
-      images: ogImage ? [ogImage] : undefined,
+      images: [ogImage],
     },
     robots: noIndex ? { index: false, follow: false } : undefined,
   };
