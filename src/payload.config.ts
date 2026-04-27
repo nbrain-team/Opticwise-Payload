@@ -4,7 +4,6 @@ import { fileURLToPath } from "url";
 import { buildConfig } from "payload";
 import { postgresAdapter } from "@payloadcms/db-postgres";
 import { lexicalEditor } from "@payloadcms/richtext-lexical";
-import { seoPlugin } from "@payloadcms/plugin-seo";
 import { vercelBlobStorage } from "@payloadcms/storage-vercel-blob";
 import sharp from "sharp";
 
@@ -16,6 +15,7 @@ import { Authors } from "./collections/Authors";
 import { Users } from "./collections/Users";
 import { SiteSettings } from "./globals/SiteSettings";
 import { Navigation } from "./globals/Navigation";
+import { Footer } from "./globals/Footer";
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -65,7 +65,7 @@ export default buildConfig({
     },
   },
   collections: [Pages, Posts, Media, Categories, Authors, Users],
-  globals: [SiteSettings, Navigation],
+  globals: [SiteSettings, Navigation, Footer],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || "CHANGE-ME-PLEASE",
   typescript: {
@@ -79,12 +79,6 @@ export default buildConfig({
   }),
   sharp,
   plugins: [
-    seoPlugin({
-      collections: ["pages", "posts"],
-      uploadsCollection: "media",
-      generateTitle: ({ doc }: any) => `${doc?.title || "OpticWise"} | OpticWise`,
-      generateDescription: ({ doc }: any) => doc?.excerpt || "",
-    }),
     vercelBlobStorage({
       enabled: !!process.env.BLOB_READ_WRITE_TOKEN,
       collections: {

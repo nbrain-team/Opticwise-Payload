@@ -67,7 +67,7 @@ function ScheduleReviewPopupInner({ onClose }: { onClose: () => void }) {
         <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-2xl flex items-center justify-between">
           <div>
             <h2 className="text-xl font-bold text-gray-900">Schedule Your Review</h2>
-            <p className="text-sm text-gray-500 mt-0.5">Complementary CRE Data & Digital Review Session</p>
+            <p className="text-sm text-gray-500 mt-0.5">Complimentary CRE Data & Digital Review Session</p>
           </div>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -117,5 +117,34 @@ export const Posts: CollectionConfig = {
         description: "Estimated reading time in minutes.",
       },
     },
+    {
+      name: "meta",
+      type: "group",
+      label: "SEO",
+      admin: { position: "sidebar" },
+      fields: [
+        {
+          name: "title",
+          type: "text",
+          admin: { description: "Meta title (50–60 chars). Falls back to post title if empty." },
+        },
+        {
+          name: "description",
+          type: "textarea",
+          admin: { description: "Meta description (150–160 chars). Falls back to excerpt if empty." },
+        },
+        {
+          name: "ogImage",
+          type: "upload",
+          relationTo: "media",
+          admin: { description: "Social share image (1200×630). Falls back to feature image, then default OG image." },
+        },
+        {
+          name: "noIndex",
+          type: "checkbox",
+          admin: { description: "Hide this post from search engines." },
+        },
+      ],
+    },
   ],
 };

@@ -1674,3 +1674,80 @@
     text-align: center;
   }
 }
+
+/* ==========================================================================
+   NAV DROPDOWN (top-level header dropdown menus)
+   ========================================================================== */
+
+.nav__dropdown {
+  position: relative;
+  list-style: none;
+}
+.nav__dropdown-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: default;
+  transition: color var(--duration-fast);
+}
+.nav__dropdown-trigger::after {
+  content: '\25BE';
+  font-size: 9px;
+  margin-left: 2px;
+  opacity: 0.7;
+}
+.nav__dropdown:hover .nav__dropdown-trigger,
+.nav__dropdown:focus-within .nav__dropdown-trigger {
+  color: var(--text);
+}
+.nav__dropdown-menu {
+  position: absolute;
+  top: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 220px;
+  padding: 12px;
+  background: rgba(15, 16, 18, 0.95);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(-50%) translateY(-4px);
+  transition: opacity var(--duration-fast) var(--ease-out),
+              transform var(--duration-fast) var(--ease-out),
+              visibility var(--duration-fast);
+  z-index: 60;
+}
+.nav__dropdown:hover .nav__dropdown-menu,
+.nav__dropdown:focus-within .nav__dropdown-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+.nav__dropdown-menu .nav__link {
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background var(--duration-fast), color var(--duration-fast);
+}
+.nav__dropdown-menu .nav__link:hover {
+  background: var(--bg-surface);
+  color: var(--text);
+}
+
+@media (max-width: 900px) {
+  .nav__dropdown-menu { display: none; }
+}

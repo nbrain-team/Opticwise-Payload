@@ -1,14 +1,40 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getPostBySlug, getPostFeatureImageUrl } from "@/lib/payload-helpers";
+import {
+  getPostBySlug,
+  getPostFeatureImageUrl,
+  getSiteSettings,
+} from "@/lib/payload-helpers";
 import { PostBodyLive } from "@/components/PostBodyLive";
 import { CTASection } from "@/components/CTASection";
+import JsonLd from "@/components/JsonLd";
+import { buildMetadata, articleSchema, breadcrumbSchema } from "@/lib/seo";
 
 // See note in app/(frontend)/(main)/[...slug]/page.tsx — on-demand ISR
 // to avoid prerendering 93 posts at depth=2 during build (which blows
 // the Neon serverless protocol message size limit).
 export const revalidate = 300;
 export const dynamicParams = true;
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const [post, settings] = await Promise.all([
+    getPostBySlug(slug).catch(() => null),
+    getSiteSettings().catch(() => null),
+  ]);
+  if (!post) return {};
+  return buildMetadata({
+    doc: post,
+    settings,
+    pathname: `/insights/${slug}`,
+    type: "article",
+  });
+}
 
 export default async function InsightPostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -21,6 +47,8 @@ export default async function InsightPostPage({ params }: { params: Promise<{ sl
 
   return (
     <>
+      <JsonLd data={breadcrumbSchema(p.title, `/insights/${slug}`)} />
+      <JsonLd data={articleSchema(p)} />
       <section className="relative overflow-hidden pt-36 pb-16">
         <div className="absolute inset-0 z-0">
           {featureImage ? (

@@ -6,7 +6,7 @@ export const SITE = {
   closingLine:
     "Own your data & digital infrastructure. Operate with strategic foresight. Build for the long game.",
   primaryCTA: {
-    label: "Complementary CRE Data & Digital Review Session",
+    label: "Complimentary CRE Data & Digital Review Session",
     microcopy:
       "One building. Map who owns what, where data lives, and where operational burden stacks up vs your KPIs.",
     href: "/ppp-audit/",
