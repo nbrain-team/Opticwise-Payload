@@ -150,6 +150,16 @@ export async function getNavigation() {
   }
 }
 
+export async function getFooter() {
+  try {
+    const payload = await getPayloadClient();
+    return await payload.findGlobal({ slug: "footer" });
+  } catch (e) {
+    console.warn("[helpers] getFooter failed, returning null:", (e as Error).message);
+    return null;
+  }
+}
+
 export {
   getMediaUrl,
   getMediaAlt,
