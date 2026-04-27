@@ -30,6 +30,12 @@ export function SiteHeaderView({ items }: SiteHeaderViewProps) {
     ? "text-gray-600 hover:text-ow-blue"
     : "text-white/85 hover:text-white";
 
+  // Dedupe: if the nav data already contains a button-style item (e.g. seeded
+  // "Schedule Review"), the loop will render it. Skip the hardcoded popup
+  // button so we don't double-render. If admin removes button items from the
+  // nav, the hardcoded popup button still renders as a safety-net CTA.
+  const hasButtonItem = items.some((i) => i.style === "button");
+
   return (
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -97,9 +103,11 @@ export function SiteHeaderView({ items }: SiteHeaderViewProps) {
           })}
         </ul>
 
-        <span className="hidden lg:inline-flex">
-          <ScheduleReviewButton className="btn btn-nav" label="Schedule Review" />
-        </span>
+        {!hasButtonItem && (
+          <span className="hidden lg:inline-flex">
+            <ScheduleReviewButton className="btn btn-nav" label="Schedule Review" />
+          </span>
+        )}
 
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
@@ -144,10 +152,12 @@ export function SiteHeaderView({ items }: SiteHeaderViewProps) {
                 </Link>,
               ];
             })}
-            <ScheduleReviewButton
-              className="btn btn-primary text-center mt-3 text-sm py-3"
-              label="Schedule Review"
-            />
+            {!hasButtonItem && (
+              <ScheduleReviewButton
+                className="btn btn-primary text-center mt-3 text-sm py-3"
+                label="Schedule Review"
+              />
+            )}
           </div>
         </div>
       )}
