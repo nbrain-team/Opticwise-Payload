@@ -64,7 +64,7 @@ export async function getHomePage() {
       collection: "pages",
       where: { isHomePage: { equals: true } },
       limit: 1,
-      depth: 2,
+      depth: 3,
     });
     return result.docs[0] || null;
   }));
@@ -77,7 +77,7 @@ export async function getPageBySlug(slug: string) {
       collection: "pages",
       where: { slug: { equals: slug } },
       limit: 1,
-      depth: 2,
+      depth: 3,
     });
     return result.docs[0] || null;
   }));

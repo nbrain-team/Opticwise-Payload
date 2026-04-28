@@ -46,6 +46,15 @@ export const CardGrid: Block = {
       minRows: 2,
       labels: { singular: 'Card', plural: 'Cards' },
       fields: [
+        {
+          name: 'image',
+          type: 'upload',
+          relationTo: 'media',
+          required: false,
+          admin: {
+            description: 'Optional logo or icon. Displays at the top of the card.',
+          },
+        },
         { name: 'title', type: 'text', required: true },
         { name: 'description', type: 'textarea', required: true },
         {

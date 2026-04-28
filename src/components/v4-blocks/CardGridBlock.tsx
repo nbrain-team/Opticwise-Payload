@@ -20,8 +20,23 @@ export default function CardGridBlock({
         </div>
         <div className="cards__grid">
           {(cards || []).map((card: any, i: number) => {
+            const logo =
+              card?.image &&
+              typeof card.image === 'object' &&
+              typeof card.image.url === 'string'
+                ? card.image
+                : null
             const Content = (
               <>
+                {logo && (
+                  <div className="mb-4 px-4 flex justify-center items-center min-h-0">
+                    <img
+                      src={logo.url}
+                      alt={logo.alt || card.title || ''}
+                      className="max-h-[60px] w-auto object-contain object-center"
+                    />
+                  </div>
+                )}
                 <h3 className="cards__card-title">{card.title}</h3>
                 <p className="cards__card-desc">{card.description}</p>
               </>

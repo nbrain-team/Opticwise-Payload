@@ -2,7 +2,12 @@ import type { CollectionConfig } from "payload";
 
 export const Users: CollectionConfig = {
   slug: "users",
-  auth: true,
+  auth: {
+    // JWT-only auth: avoids "session invalid" failures when server-side
+    // session rows and the signed sid in the token fall out of sync (e.g.
+    // after DB stress or Neon restarts). Admin access is unchanged.
+    useSessions: false,
+  },
   admin: {
     useAsTitle: "email",
   },

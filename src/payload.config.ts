@@ -20,6 +20,25 @@ import { Footer } from "./globals/Footer";
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
 
+const serverURL =
+  process.env.NEXT_PUBLIC_SERVER_URL?.replace(/\/$/, "") ||
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "") ||
+  "http://localhost:3000";
+
+const vercelOrigin = process.env.VERCEL_URL
+  ? `https://${process.env.VERCEL_URL}`
+  : "";
+
+/** Extra admin origins allowed for JWT cookie extraction (comma-separated full origins, no trailing slashes). */
+const csrfExtra = (process.env.PAYLOAD_CSRF_ORIGINS ?? "")
+  .split(",")
+  .map((o) => o.trim().replace(/\/$/, ""))
+  .filter(Boolean);
+
+const csrfAllowed = [
+  ...new Set([serverURL, vercelOrigin, ...csrfExtra].filter(Boolean)),
+];
+
 /**
  * Live-preview URLs are returned as RELATIVE paths.
  * Payload's `formatAbsoluteURL` resolves them against
@@ -31,6 +50,8 @@ const dirname = path.dirname(filename);
  */
 
 export default buildConfig({
+  serverURL,
+  csrf: csrfAllowed,
   admin: {
     user: Users.slug,
     importMap: {
@@ -49,12 +70,12 @@ export default buildConfig({
       beforeDashboard: ["/admin/BeforeDashboard#BeforeDashboard"],
     },
     livePreview: {
-      url: ({ data, collectionConfig }: any) => {
+      url: ({ data, collectionConfig }) => {
         if (collectionConfig?.slug === "posts") {
-          return `/insights/${(data?.slug as string) || ""}`;
+          return `/insights/${String(data?.slug || "")}`;
         }
         if (data?.isHomePage) return "/";
-        return `/${(data?.slug as string) || ""}`;
+        return `/${String(data?.slug || "")}`;
       },
       collections: ["pages", "posts"],
       breakpoints: [
