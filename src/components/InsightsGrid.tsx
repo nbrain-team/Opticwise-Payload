@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import Link from "next/link";
+
+const PAGE_SIZE = 30;
 
 function formatDate(dateStr: string | null) {
   if (!dateStr) return "";
@@ -27,6 +29,8 @@ interface PostCard {
 export function InsightsGrid({ posts, tags }: { posts: PostCard[]; tags: string[] }) {
   const [activeTag, setActiveTag] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   const filtered = useMemo(() => {
     let result = posts;
@@ -43,6 +47,36 @@ export function InsightsGrid({ posts, tags }: { posts: PostCard[]; tags: string[
     }
     return result;
   }, [posts, activeTag, search]);
+
+  // Reset pagination whenever the filter or search changes so the user
+  // always sees the first PAGE_SIZE results of the new query.
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [activeTag, search]);
+
+  const visiblePosts = useMemo(
+    () => filtered.slice(0, visibleCount),
+    [filtered, visibleCount]
+  );
+  const hasMore = visibleCount < filtered.length;
+
+  // Auto-load more when the sentinel scrolls into view.
+  useEffect(() => {
+    if (!hasMore) return;
+    const node = sentinelRef.current;
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setVisibleCount((c) => Math.min(c + PAGE_SIZE, filtered.length));
+        }
+      },
+      { rootMargin: "600px 0px" },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [hasMore, filtered.length]);
 
   return (
     <>
@@ -78,47 +112,77 @@ export function InsightsGrid({ posts, tags }: { posts: PostCard[]; tags: string[
               </p>
             </div>
           ) : (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filtered.map((post) => (
-                <Link key={post.id} href={`/insights/${post.slug}/`} className="group block bg-white border border-gray-200 rounded-2xl overflow-hidden hover:shadow-xl hover:-translate-y-1 hover:border-ow-blue/20 transition-all no-underline">
-                  <div className="aspect-[16/9] overflow-hidden bg-gray-100">
-                    {post.featureImageUrl ? (
-                      <img src={post.featureImageUrl} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-ow-navy to-ow-navy/80">
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.3)" strokeWidth="1">
-                          <path d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-                        </svg>
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-6">
-                    {post.categoryName && (
-                      <span className="inline-block text-xs font-bold text-ow-blue bg-blue-50 px-3 py-1 rounded-full mb-3">
-                        {post.categoryName}
-                      </span>
-                    )}
-                    <h3 className="text-base font-bold text-gray-900 mb-2 leading-snug group-hover:text-ow-blue transition-colors">
-                      {post.title}
-                    </h3>
-                    {post.excerpt && (
-                      <p className="text-sm text-gray-500 leading-relaxed line-clamp-3 mb-3">
-                        {post.excerpt}
-                      </p>
-                    )}
-                    <div className="flex items-center gap-2 text-xs text-gray-400">
-                      {post.publishedAt && <span>{formatDate(post.publishedAt)}</span>}
-                      {post.readingTime ? (
-                        <>
-                          <span>&middot;</span>
-                          <span>{post.readingTime} min read</span>
-                        </>
-                      ) : null}
+            <>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                {visiblePosts.map((post, idx) => (
+                  <Link key={post.id} href={`/insights/${post.slug}/`} className="group block bg-white border border-gray-200 rounded-2xl overflow-hidden hover:shadow-xl hover:-translate-y-1 hover:border-ow-blue/20 transition-all no-underline">
+                    <div className="aspect-[16/9] overflow-hidden bg-gray-100">
+                      {post.featureImageUrl ? (
+                        <img
+                          src={post.featureImageUrl}
+                          alt={post.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          loading={idx < 6 ? "eager" : "lazy"}
+                          decoding="async"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-ow-navy to-ow-navy/80">
+                          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.3)" strokeWidth="1">
+                            <path d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                          </svg>
+                        </div>
+                      )}
                     </div>
+                    <div className="p-6">
+                      {post.categoryName && (
+                        <span className="inline-block text-xs font-bold text-ow-blue bg-blue-50 px-3 py-1 rounded-full mb-3">
+                          {post.categoryName}
+                        </span>
+                      )}
+                      <h3 className="text-base font-bold text-gray-900 mb-2 leading-snug group-hover:text-ow-blue transition-colors">
+                        {post.title}
+                      </h3>
+                      {post.excerpt && (
+                        <p className="text-sm text-gray-500 leading-relaxed line-clamp-3 mb-3">
+                          {post.excerpt}
+                        </p>
+                      )}
+                      <div className="flex items-center gap-2 text-xs text-gray-400">
+                        {post.publishedAt && <span>{formatDate(post.publishedAt)}</span>}
+                        {post.readingTime ? (
+                          <>
+                            <span>&middot;</span>
+                            <span>{post.readingTime} min read</span>
+                          </>
+                        ) : null}
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+
+              {hasMore && (
+                <>
+                  <div ref={sentinelRef} aria-hidden className="h-1 w-full" />
+                  <div className="flex justify-center mt-10">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setVisibleCount((c) => Math.min(c + PAGE_SIZE, filtered.length))
+                      }
+                      className="rounded-full border border-gray-200 bg-white px-6 py-2.5 text-sm font-semibold text-gray-700 hover:border-ow-blue hover:text-ow-blue transition-colors"
+                    >
+                      Load more ({filtered.length - visibleCount} remaining)
+                    </button>
                   </div>
-                </Link>
-              ))}
-            </div>
+                </>
+              )}
+
+              <p className="mt-6 text-center text-xs text-gray-400">
+                Showing {visiblePosts.length} of {filtered.length}
+                {filtered.length !== posts.length ? ` (${posts.length} total)` : ""}
+              </p>
+            </>
           )}
         </div>
       </section>
