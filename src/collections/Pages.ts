@@ -14,6 +14,7 @@ import { PortfolioGrid } from "../blocks/v4/PortfolioGrid";
 import { CallToAction } from "../blocks/v4/CallToAction";
 import { RichContent } from "../blocks/v4/RichContent";
 import { FAQ } from "../blocks/v4/FAQ";
+import { FormEmbed } from "../blocks/v4/FormEmbed";
 import { revalidatePage, revalidatePageDelete } from "../hooks/revalidate";
 
 const FALLBACK_SERVER_URL =
@@ -182,6 +183,7 @@ export const Pages: CollectionConfig = {
         CallToAction,
         RichContent,
         FAQ,
+        FormEmbed,
       ],
     },
   ],

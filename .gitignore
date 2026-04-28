@@ -5,3 +5,9 @@ node_modules/
 public/media/
 *.tsbuildinfo
 next-env.d.ts
+
+# Playwright MCP captures (local debugging artifacts)
+.playwright-mcp/
+*.png
+!public/**/*.png
+!src/**/*.png

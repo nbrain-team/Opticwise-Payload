@@ -5,6 +5,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "vercel-build": "node scripts/run-migrations.mjs && next build",
+    "db:migrate": "node scripts/run-migrations.mjs",
+    "db:migrate:dry": "node scripts/run-migrations.mjs --dry-run",
     "start": "next start",
     "lint": "next lint",
     "generate:types": "payload generate:types",

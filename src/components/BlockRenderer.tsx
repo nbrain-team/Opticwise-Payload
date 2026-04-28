@@ -15,6 +15,7 @@ import PortfolioGridBlock from "./v4-blocks/PortfolioGridBlock";
 import CallToActionBlock from "./v4-blocks/CallToActionBlock";
 import RichContentBlock from "./v4-blocks/RichContentBlock";
 import FAQBlock from "./v4-blocks/FAQBlock";
+import FormEmbedBlock from "./v4-blocks/FormEmbedBlock";
 
 const blockComponents: Record<string, any> = {
   hero: HeroBlock,
@@ -32,6 +33,7 @@ const blockComponents: Record<string, any> = {
   callToAction: CallToActionBlock,
   richContent: RichContentBlock,
   faq: FAQBlock,
+  formEmbed: FormEmbedBlock,
 };
 
 /**

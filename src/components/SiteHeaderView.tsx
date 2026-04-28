@@ -16,6 +16,22 @@ interface SiteHeaderViewProps {
   items: NavItemView[];
 }
 
+/**
+ * A button-style nav item is treated as a popup-trigger (Schedule Review form)
+ * when its href points at /ppp-audit (the legacy "Schedule Review" landing
+ * page) OR uses the explicit `#form/<slug>` convention. Both currently open
+ * the schedule-review form; if we add more form types later, parse the slug
+ * out of `#form/<slug>` and pass it to the popup. Anything else stays a
+ * regular link.
+ */
+function isPopupHref(href?: string): boolean {
+  if (!href) return false;
+  const h = href.trim();
+  if (h === "/ppp-audit" || h === "/ppp-audit/") return true;
+  if (h.startsWith("#form/")) return true;
+  return false;
+}
+
 export function SiteHeaderView({ items }: SiteHeaderViewProps) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -82,6 +98,16 @@ export function SiteHeaderView({ items }: SiteHeaderViewProps) {
               );
             }
             if (item.style === "button" && item.href) {
+              if (isPopupHref(item.href)) {
+                return (
+                  <li key={`${item.label}-${idx}`}>
+                    <ScheduleReviewButton
+                      className="btn btn-nav"
+                      label={item.label}
+                    />
+                  </li>
+                );
+              }
               return (
                 <li key={`${item.label}-${idx}`}>
                   <Link href={item.href} className="btn btn-nav">
@@ -140,6 +166,20 @@ export function SiteHeaderView({ items }: SiteHeaderViewProps) {
                     {c.label}
                   </Link>
                 ));
+              }
+              if (item.style === "button" && isPopupHref(item.href)) {
+                return [
+                  <div
+                    key={`${idx}-${item.label}`}
+                    onClick={() => setMobileOpen(false)}
+                    className="border-b border-gray-100 py-2.5"
+                  >
+                    <ScheduleReviewButton
+                      className="btn btn-primary w-full text-center text-sm py-3"
+                      label={item.label}
+                    />
+                  </div>,
+                ];
               }
               return [
                 <Link
