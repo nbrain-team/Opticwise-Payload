@@ -1,10 +1,14 @@
 import type { GlobalConfig } from "payload";
+import { stripArrayIdsBeforeChange } from "../hooks/stripArrayIds";
 
 export const SiteSettings: GlobalConfig = {
   slug: "site-settings",
   label: "Site Settings",
   admin: {
     description: "Global site configuration — branding, CTA defaults, footer text.",
+  },
+  hooks: {
+    beforeChange: [stripArrayIdsBeforeChange],
   },
   fields: [
     {

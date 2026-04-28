@@ -1,10 +1,14 @@
 import type { GlobalConfig } from "payload";
+import { stripArrayIdsBeforeChange } from "../hooks/stripArrayIds";
 
 export const Navigation: GlobalConfig = {
   slug: "navigation",
   label: "Navigation",
   admin: {
     description: "Site header navigation.",
+  },
+  hooks: {
+    beforeChange: [stripArrayIdsBeforeChange],
   },
   fields: [
     {

@@ -1,9 +1,13 @@
 import type { GlobalConfig } from "payload";
+import { stripArrayIdsBeforeChange } from "../hooks/stripArrayIds";
 
 export const Footer: GlobalConfig = {
   slug: "footer",
   access: {
     read: () => true,
+  },
+  hooks: {
+    beforeChange: [stripArrayIdsBeforeChange],
   },
   fields: [
     {
