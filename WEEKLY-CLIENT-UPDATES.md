@@ -1,5 +1,22 @@
 # Weekly Client Updates
 
+### 2026-05-07 — Static HTML mirror is now openable by double-click
+
+- Made the static HTML version of opticwise.com fully openable by simply
+  double-clicking `opticwise-html/index.html` in Finder — no local server
+  needed. Every page link, image, and stylesheet now uses a relative
+  path, and directory links automatically resolve to their `index.html`
+  so `file://` browsing works exactly like a real website.
+- Local HTTP preview (`npm run html:preview`) continues to work
+  identically — the same export now serves correctly via both methods.
+- Hardened the crawler so transient errors from the live site no longer
+  leave the export with missing pages: it now retries with longer
+  backoff and runs a second pass on any failures. Result: every page in
+  the live sitemap (150 URLs across 24 marketing pages and 126 insights
+  posts) makes it into the export on every build.
+- The README inside `opticwise-html/` is now auto-generated as part of
+  the build, so it always reflects the current export.
+
 ### 2026-05-07 — Static HTML mirror of opticwise.com (off-Payload evaluation)
 
 - Generated a complete, fully-styled static HTML version of the entire
