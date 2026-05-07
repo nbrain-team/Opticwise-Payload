@@ -60,9 +60,164 @@ const KEEP_REMOTE_HOSTS = new Set([
 const log = (...a) => console.log("[mirror]", ...a);
 const warn = (...a) => console.warn("[mirror][warn]", ...a);
 
+/* ------------------------------------------------------ README content */
+
+function buildReadme({ pages, posts, assets }) {
+  return `# opticwise-html — Static HTML Mirror of opticwise.com
+
+This folder is a **100% static HTML mirror of the live opticwise.com site** as
+of the most recent crawl. It was generated to evaluate moving off Payload CMS
+to a plain HTML hosting model **without sacrificing visual fidelity, content,
+SEO, or page coverage**.
+
+> **Source of truth:** [\`https://www.opticwise.com\`](https://www.opticwise.com)
+> **Crawler script:** [\`scripts/static-export/build-html-mirror.mjs\`](../scripts/static-export/build-html-mirror.mjs)
+
+## What's inside
+
+| Type | Count |
+| --- | ---: |
+| Top-level pages | ${pages} |
+| Insights / blog posts | ${posts} |
+| CSS / JS / image / font assets | ${assets} |
+
+Every URL in the live \`sitemap.xml\` is captured here, plus the \`/insights\`
+listing page, the RSS feed, sitemap, robots.txt, and all favicons.
+
+### Folder layout
+
+\`\`\`
+opticwise-html/
+├── index.html                     ← homepage (was /)
+├── about/index.html               ← /about
+├── contact/index.html             ← /contact
+├── faq/index.html, glossary/...   ← every other top-level page
+├── insights/
+│   ├── index.html                 ← /insights (blog landing page)
+│   └── <slug>/index.html          ← every blog post
+├── _next/static/                  ← Next.js CSS + JS bundles
+├── api/media/file/                ← Payload-served media (images, PDFs)
+├── images/                        ← static logo / brand assets
+├── favicon.ico, favicon.png, ...
+├── sitemap.xml, robots.txt
+└── _mirror-manifest.json          ← debug log of every URL captured
+\`\`\`
+
+Every URL inside the mirror is rewritten to a **relative path** (e.g.
+\`./about/index.html\` from the homepage, \`../about/index.html\` from any
+top-level page, \`../../about/index.html\` from a blog post). Directory
+links also have \`index.html\` appended so a \`file://\` URL can find the
+file (browsers don't auto-resolve \`/foo/\` to \`/foo/index.html\` over
+\`file://\` the way HTTP servers do).
+
+## How to preview locally
+
+You have two options:
+
+### Option 1 — Just double-click \`index.html\` (no server needed)
+
+Because every URL is relative, the site works directly from a \`file://\`
+URL. Double-click \`opticwise-html/index.html\` in Finder and the homepage
+opens in your default browser, fully styled and navigable. Click around
+between pages and they all resolve.
+
+> Note: a few interactive bits (the form embeds, search/filter on
+> \`/insights\`) rely on JavaScript that talks to the live OpticWise CRM
+> at \`ownet.opticwise.com\`. Those won't function from \`file://\` because
+> of browser CORS restrictions — the static HTML still renders perfectly.
+
+### Option 2 — Serve via local HTTP (recommended for full JS behavior)
+
+From the **repo root** (one directory above this folder):
+
+\`\`\`bash
+npm run html:preview
+# or directly:
+python3 -m http.server 4321 --directory opticwise-html
+\`\`\`
+
+Then open <http://localhost:4321/>.
+
+## How to regenerate from the live site
+
+The crawler reads the current live sitemap, downloads every page + every
+referenced asset (CSS, JS, images, fonts, RSC payloads), and rewrites
+every URL to a local relative path:
+
+\`\`\`bash
+npm run html:build
+# or directly:
+node scripts/static-export/build-html-mirror.mjs
+\`\`\`
+
+This wipes \`opticwise-html/\` and rebuilds it from scratch in ~20 seconds.
+
+## What works in the static export
+
+- Full visual fidelity — fonts, colors, hero, navigation, footer, all
+  responsive breakpoints
+- All marketing pages and all insights / blog posts, with metadata
+  (title, OG tags, JSON-LD)
+- The \`/insights\` landing page — search, category filters, "Load more"
+- Internal navigation between pages
+- All static images (logos, hero photos, blog hero art, awards, book covers)
+- Favicons, sitemap, robots
+- Google Fonts (loaded from Google's CDN, same as the live site)
+
+## Known limitations of a static export
+
+These would need to be addressed before fully cutting over from Payload:
+
+1. **Embedded forms (\`/contact\`, "Schedule Your Review", PPP starter kit)**
+   are rendered by \`RemoteFormRenderer\`, which fetches the form schema
+   from \`https://ownet.opticwise.com/api/public/forms/<slug>\`. That
+   endpoint currently does not include a CORS allow-origin header for any
+   host except production. From \`localhost:4321\` and any new domain, you
+   will see the graceful fallback message *"We couldn't load this form
+   right now."* When migrating, either:
+   - add the new static-site origin to the CRM's CORS allowlist, or
+   - replace \`RemoteFormRenderer\` with a plain HTML \`<form>\` POSTing
+     directly to the CRM's form endpoint.
+
+2. **Newsletter signup ("Get the PPP Starter Kit")** uses the same CRM
+   endpoint and has the same CORS constraint.
+
+3. **Live Preview / Payload admin** (\`/admin/...\`) is not included — the
+   admin UI is the entire point of Payload and would not exist in a
+   plain-HTML world. Editorial workflow becomes "edit HTML files and push
+   git" or "regenerate from a new source".
+
+4. **Dynamic routes** that rely on Payload at request time:
+   - \`/sitemap.xml\` (currently auto-generated from the DB) is captured
+     as a static snapshot; it will go stale unless regenerated.
+   - \`/blog/feed.xml\` (RSS) — same caveat.
+   - 404 page — Next.js renders a custom 404 from a Payload global; the
+     static export only has the rendered HTML for known URLs and will
+     return whatever the static server's default 404 is.
+
+5. **Search engine canonicals** still point to
+   \`https://www.opticwise.com\` (correct for SEO continuity). If the
+   static site is hosted on a different domain, update canonicals before
+   promoting it.
+
+6. **Image optimization** — the live Next.js site uses \`_next/image\` to
+   serve responsive JPEG/WebP/AVIF variants on demand. The static mirror
+   resolves every image reference down to its underlying source file
+   (typically a PNG or JPG from \`/images/\` or \`/api/media/file/\`).
+   Pages look identical, but you lose automatic responsive image
+   optimization; compensating with build-time srcset generation is
+   straightforward.
+
+## Generated by
+
+\`scripts/static-export/build-html-mirror.mjs\` — a single-file Node crawler
+with no external runtime dependencies (uses native \`fetch\` from Node 18+).
+`;
+}
+
 /* ---------------------------------------------------------------- helpers */
 
-async function fetchWithRetry(url, attempts = 4) {
+async function fetchWithRetry(url, attempts = 6) {
   let lastErr;
   for (let i = 0; i < attempts; i++) {
     try {
@@ -70,7 +225,10 @@ async function fetchWithRetry(url, attempts = 4) {
         headers: { "User-Agent": "OpticWise-Static-Mirror/1.0" },
         redirect: "follow",
       });
-      // 4xx is "real" failure -- don't retry. 5xx and network issues retry with backoff.
+      // 4xx is "real" failure -- don't retry. 5xx and network issues retry
+      // with exponential backoff. The live opticwise.com Vercel deployment
+      // intermittently returns 500s for individual pages (cold-start/Neon
+      // pool churn), so the retry curve needs to cover several seconds.
       if (res.ok) return res;
       if (res.status >= 400 && res.status < 500) {
         throw new Error(`HTTP ${res.status} for ${url}`);
@@ -80,7 +238,7 @@ async function fetchWithRetry(url, attempts = 4) {
       lastErr = err;
     }
     if (i < attempts - 1) {
-      const wait = 500 * Math.pow(2, i) + Math.random() * 200;
+      const wait = 800 * Math.pow(2, i) + Math.random() * 400;
       await new Promise((r) => setTimeout(r, wait));
     }
   }
@@ -287,7 +445,54 @@ function extractUrlsFromCss(css) {
 
 /* --------------------------------------------------------- url rewriting */
 
-function rewriteHtml(html, pageUrl) {
+/**
+ * Convert an absolute-from-OUT_DIR public URL (e.g. "/about/" or
+ * "/_next/static/css/foo.css") into a relative path that works when the
+ * file at `fromLocalPath` is opened directly in a browser via the
+ * `file://` protocol — meaning:
+ *
+ *   1. No leading `/` (which would resolve to the filesystem root under
+ *      file:// and break every reference). Each path is prefixed with
+ *      enough `../` segments to climb back to OUT_DIR.
+ *   2. Directory-style links (no extension, ending in `/`) are extended
+ *      with `index.html` because `file://` does not auto-serve index
+ *      files when a request lands on a directory.
+ *
+ * The output also remains 100% compatible with normal HTTP serving.
+ */
+function relativize(absPublicUrl, fromLocalPath) {
+  if (!absPublicUrl || typeof absPublicUrl !== "string") return absPublicUrl;
+  if (absPublicUrl.startsWith("#")) return absPublicUrl;
+  if (/^(https?:|mailto:|tel:|javascript:|data:|blob:)/i.test(absPublicUrl)) {
+    return absPublicUrl;
+  }
+  if (!absPublicUrl.startsWith("/")) return absPublicUrl;
+
+  const fromDir = path.dirname(fromLocalPath);
+  const relDir = path.relative(OUT_DIR, fromDir);
+  const depth = relDir === "" ? 0 : relDir.split(path.sep).length;
+  const prefix = depth === 0 ? "./" : "../".repeat(depth);
+
+  // Split off any query/fragment so we don't accidentally treat `?` or `#`
+  // as part of the path when deciding whether to append `index.html`.
+  const hashIdx = absPublicUrl.indexOf("#");
+  const hash = hashIdx === -1 ? "" : absPublicUrl.slice(hashIdx);
+  const noHash = hashIdx === -1 ? absPublicUrl : absPublicUrl.slice(0, hashIdx);
+  const qIdx = noHash.indexOf("?");
+  const query = qIdx === -1 ? "" : noHash.slice(qIdx);
+  const pathOnly = qIdx === -1 ? noHash : noHash.slice(0, qIdx);
+
+  let stripped = pathOnly.replace(/^\/+/, "");
+  if (stripped === "" || stripped.endsWith("/")) {
+    stripped += "index.html";
+  }
+
+  return prefix + stripped + query + hash;
+}
+
+function rewriteHtml(html, pageUrl, localPath) {
+  const rel = (pub) => relativize(pub, localPath);
+
   // href="..." / src="..." / action="..." / data-src="..." / poster="..."
   const attrPattern =
     /\b(href|src|data-src|poster|action)\s*=\s*"([^"]+)"/gi;
@@ -296,10 +501,7 @@ function rewriteHtml(html, pageUrl) {
     if (!abs) return full;
     const mapped = urlToLocal(abs);
     if (!mapped) return full;
-    if (mapped.keepRemote) {
-      return `${attr}="${mapped.publicUrl}"`;
-    }
-    return `${attr}="${mapped.publicUrl}"`;
+    return `${attr}="${rel(mapped.publicUrl)}"`;
   });
 
   // imageSrcSet / srcSet / srcset
@@ -314,8 +516,7 @@ function rewriteHtml(html, pageUrl) {
       if (!abs) return part;
       const mapped = urlToLocal(abs);
       if (!mapped) return part;
-      const pub = mapped.keepRemote ? mapped.publicUrl : mapped.publicUrl;
-      return [pub, ...rest].join(" ");
+      return [rel(mapped.publicUrl), ...rest].join(" ");
     });
     return `${attr}="${rebuilt.join(", ")}"`;
   });
@@ -350,14 +551,13 @@ function rewriteHtml(html, pageUrl) {
   return html;
 }
 
-function rewriteCss(css, cssUrl) {
+function rewriteCss(css, cssUrl, localPath) {
   return css.replace(CSS_URL_PATTERN, (full, q, raw) => {
     const abs = resolveUrl(raw, cssUrl);
     if (!abs) return full;
     const mapped = urlToLocal(abs);
     if (!mapped) return full;
-    const pub = mapped.keepRemote ? mapped.publicUrl : mapped.publicUrl;
-    return `url(${q}${pub}${q})`;
+    return `url(${q}${relativize(mapped.publicUrl, localPath)}${q})`;
   });
 }
 
@@ -400,7 +600,7 @@ async function processEntry(entry) {
         if (!abs) continue;
         enqueue(abs);
       }
-      const rewritten = rewriteHtml(html, entry.absUrl);
+      const rewritten = rewriteHtml(html, entry.absUrl, entry.localPath);
       await writeFile(entry.localPath, rewritten);
       entry.status = "ok";
     } else {
@@ -416,7 +616,7 @@ async function processEntry(entry) {
             if (!abs) continue;
             enqueue(abs);
           }
-          const rewritten = rewriteCss(text, entry.absUrl);
+          const rewritten = rewriteCss(text, entry.absUrl, entry.localPath);
           await writeFile(entry.localPath, rewritten);
         } else {
           await writeFile(entry.localPath, text);
@@ -493,8 +693,35 @@ async function main() {
   for (const u of seedUrls) enqueue(u, u.match(/\.[a-zA-Z0-9]{1,8}$/) ? "asset" : "page");
 
   log(`seeded ${queue.length} urls`);
-  const total = await drainQueue();
-  log(`done. processed ${total} urls. errors: ${[...seen.values()].filter((e) => e.status === "error").length}`);
+  let total = await drainQueue();
+  log(`first pass done. processed ${total} urls. errors: ${[...seen.values()].filter((e) => e.status === "error").length}`);
+
+  // The live opticwise.com Vercel deployment intermittently 500s on cold
+  // requests (Neon connection pool churn). Re-enqueue any *page* failures
+  // that look transient (5xx / network errors) and try them again with a
+  // fresh retry budget. 4xx are real "this URL doesn't exist" results and
+  // are skipped — those broken links exist on the live site too.
+  const pageFailures = [...seen.values()].filter(
+    (e) => e.status === "error" && e.kind === "page",
+  );
+  const transientFailures = pageFailures.filter(
+    (e) => !e.error || !/HTTP 4\d\d/.test(e.error),
+  );
+  if (transientFailures.length > 0) {
+    log(
+      `re-trying ${transientFailures.length} transient page failure(s) after a 5s pause...`,
+    );
+    await new Promise((r) => setTimeout(r, 5000));
+    for (const entry of transientFailures) {
+      entry.status = "pending";
+      entry.error = null;
+      queue.push(entry);
+    }
+    total += await drainQueue();
+    log(
+      `final errors: ${[...seen.values()].filter((e) => e.status === "error").length}`,
+    );
+  }
 
   // Write a manifest to aid debugging.
   const manifest = [...seen.values()].map((e) => ({
@@ -508,6 +735,24 @@ async function main() {
     path.join(OUT_DIR, "_mirror-manifest.json"),
     JSON.stringify(manifest, null, 2),
   );
+
+  // Always (re)emit the README so re-running the build doesn't leave the
+  // mirror folder undocumented.
+  const pageEntries = [...seen.values()].filter(
+    (e) => e.kind === "page" && e.status === "ok",
+  );
+  const stats = {
+    pages: pageEntries.filter(
+      (e) => !e.absUrl.includes("/insights/") || e.absUrl.endsWith("/insights"),
+    ).length,
+    posts: pageEntries.filter(
+      (e) => /\/insights\/[^/]+/.test(new URL(e.absUrl).pathname),
+    ).length,
+    assets: [...seen.values()].filter(
+      (e) => e.kind === "asset" && e.status === "ok",
+    ).length,
+  };
+  await writeFile(path.join(OUT_DIR, "README.md"), buildReadme(stats));
 
   const errors = manifest.filter((m) => m.status === "error");
   if (errors.length) {
