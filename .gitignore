@@ -11,3 +11,7 @@ next-env.d.ts
 *.png
 !public/**/*.png
 !src/**/*.png
+!opticwise-html/**
+
+# Static HTML mirror: keep generated files but skip the per-run debug manifest.
+opticwise-html/_mirror-manifest.json
